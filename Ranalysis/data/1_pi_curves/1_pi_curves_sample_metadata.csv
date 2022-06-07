@@ -1,0 +1,3 @@
+Date,colony_id,Chamber.Channel,Position,Bin.ID,Run,Fragment.Number,Temp.Cat,Chamber.Vol.L,Notes
+20220504,POC-PI,12,12,1,1,Poc1,25.5,0.596,NA
+20220504,BK-1,9,9,1,1,Blank,25.5,0.61,NA

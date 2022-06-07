@@ -1,0 +1,7 @@
+"0","# Select variables to write to file"
+"0","pr.out <- pr %>% "
+"0","  select(colony_id, Light_Value, Run, micromol.cm2.s, micromol.cm2.h) %>%"
+"0","  mutate(timepoint=""timepoint1"")"
+"0",""
+"0","# Write to output file"
+"0","write.csv(pr.out, ""output/1_pi_curve_rates.csv"")"

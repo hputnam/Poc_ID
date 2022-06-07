@@ -1,0 +1,4 @@
+﻿"PreSens Measurement Studio 2","1.1.2.0",""
+"Date","Time","Channel","User","SensorID","Sensor_Name","delta_t","Time_Unit","Value","O2_Unit","Mode","Phase","Phase_Unit","Amplitude","Amplitude_Unit","Temp","Temp_Unit","Pressure","Pressure_Unit","Salinity","Salinity_Unit","Error","Cal0","Cal0_Unit","T0","T0_Unit","O2Cal2nd","O2_Unit","Cal2nd","Cal2nd_Unit","T2nd","T2nd_Unit","CalPressure","CalPressure_Unit","f1","dPhi1","dkSv1","dPhi2","dkSv2","m","Cal_Mode","SignalLEDCurrent","User_Signal_Intensity","ReferenceLEDCurrent","Reference_Amplitude","Device_Serial","FwVersion","SwVersion","Sensor_Type","BatchID","Calibration_Date","Sensor_Lot","PreSens_Calibr","Battery_Voltage","Battery_Voltage_Unit"
+
+"Date","Time","delta_t","Device_Serial","Channel","User","Annotation"

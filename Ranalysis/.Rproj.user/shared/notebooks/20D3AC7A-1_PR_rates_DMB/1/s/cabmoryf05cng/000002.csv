@@ -1,0 +1,26 @@
+"0","Photo <- pr %>%
+  filter(Light_Value ==620)%>% 
+  separate(fragment_ID, c(""Species"",""Number"",""Temp.Cat""), sep = ""-"")
+
+Resp <- pr %>%
+  filter(Light_Value ==0)%>% 
+  separate(fragment_ID, c(""Species"",""Number"",""Temp.Cat""), sep = ""-"")
+
+# Import morphology data
+morph<- read_csv(file = ""data/morphology.csv"")
+"
+"2","[1mRows: [22m[34m40[39m [1mColumns: [22m[34m3[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (2): fragment_ID, Morphology
+[32mdbl[39m (1): Number"
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","morph$Number <- as.character(morph$Number)"
+"0",""
+"0","# Join morph with rest of data"
+"0","Photo <- left_join(Photo, morph)"
+"2","Joining, by = ""Number"""
+"0","Resp <- left_join(Resp, morph)"
+"2","Joining, by = ""Number"""

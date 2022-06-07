@@ -1,0 +1,22 @@
+"0","#calculate CIs for all the TPC parameters
+meandrina.ci_extra_params <- Boot(meandrina.fit_nlsLM, f = function(x){unlist(calc_params(x))}, labels = names(calc_params(meandrina.fit_nlsLM)), R = 200, method = 'case') %>%
+  confint(., method = 'bca') %>%
+  as.data.frame() %>%
+  rename(conf_lower = 1, conf_upper = 2) %>%
+  rownames_to_column(., var = 'param') %>%
+  mutate(method = 'case bootstrap')
+"
+"1","
+ Number of bootstraps was 20 out of 200 attempted 
+"
+"2","extreme order statistics used as endpoints"
+"2","BCa method fails for this problem.  Using 'perc' instead"
+"2","extreme order statistics used as endpoints"
+"2","extreme order statistics used as endpoints"
+"0","#calculate CIs for all the TPC parameters"
+"0","meandrina.ci_extra_params <- Boot(meandrina.fit_nlsLM, f = function(x){unlist(calc_params(x))}, labels = names(calc_params(meandrina.fit_nlsLM)), R = 200, method = 'case') %>%"
+"0","  confint(., method = 'bca') %>%"
+"0","  as.data.frame() %>%"
+"0","  rename(conf_lower = 1, conf_upper = 2) %>%"
+"0","  rownames_to_column(., var = 'param') %>%"
+"0","  mutate(method = 'case bootstrap')"
