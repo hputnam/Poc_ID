@@ -9,7 +9,7 @@ library(tidyverse)
 library(patchwork)
 
 ###### Make Map ############
-register_google(key = "AIzaSyAJHWQg-KMSzffFNWaO1zAakoBz-klFhIg") ### use your own API
+register_google(key = "keyhashhere") ### use your own API
 
 # Sites
 sitedata <- read.csv("data/Site.info.map.csv")
