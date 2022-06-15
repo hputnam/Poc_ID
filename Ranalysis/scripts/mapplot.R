@@ -9,13 +9,13 @@ library(tidyverse)
 library(patchwork)
 
 ###### Make Map ############
-register_google(key = "keyhashhere") ### use your own API
+register_google(key = "addkeyhere") ### use your own API
 
 # Sites
-sitedata <- read.csv("data/Site.info.map.csv")
-sitedata$Lat <- round(as.numeric(as.character(sitedata$Lat)),4)
+sitedata <- read.csv("data/gps_point_moorea202205.csv")
+#sitedata$Lat <- round(as.numeric(as.character(sitedata$Lat)),4)
 str(sitedata)
-labels <- sitedata$Site
+labels <- sitedata$ident
 isledata <- read.csv("data/Island.info.map.csv")
 island <- isledata$Site
 # location
@@ -31,8 +31,8 @@ MooreaSitemap<-ggmap(M1)+
   scalebar(x.min = -149.804, x.max = -149.808,y.min = -17.480, y.max = -17.475,
            model = 'WGS84', box.fill = c("gray", "white"), st.color = "white",
            location =  "bottomright", transform = TRUE, dist_unit = "km", dist = 1) +
-  geom_point(data = sitedata, mapping = aes(x=Long, y=Lat), size=1)+
-  geom_text(data = sitedata, aes(x=Long, y=Lat, label=labels),vjust = -2,size=1 )+
+  geom_point(data = sitedata, mapping = aes(x=Longitude, y=Latitude), size=0.5)+
+  geom_text(data = sitedata, aes(x=Longitude, y=Latitude, label=labels),vjust = -2,size=1 )+
   ggtitle('B')+
   xlab("")+
   ylab("")
