@@ -1,3 +1,0 @@
-"0","#specify data"
-"0","Data$PAR <- as.numeric(Data$Light_Value)"
-"0","Data$Pc <- as.numeric(Data$micromol.cm2.h)"

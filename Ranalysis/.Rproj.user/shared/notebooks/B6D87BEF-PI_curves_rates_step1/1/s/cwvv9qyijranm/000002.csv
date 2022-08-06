@@ -1,3 +1,0 @@
-"0","df.out <- df %>% "
-"0","  unnest(regs) %>%"
-"0","  mutate(micromol.L.s = map_dbl(rankLcRg, ~ pluck(., ""allRegs"", ""b1"", 1)))"
