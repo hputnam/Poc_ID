@@ -312,7 +312,7 @@ TPC.plot <- ggplot(data=Photodata, aes(x=temp)) +
    scale_x_continuous(breaks=c(22,24,26,28,30,32,34,36))+
    theme_bw(base_size = 12) +
    scale_colour_manual(name="Morphology",values=cols)+
-   theme(legend.position = c(0.85, 0.85),
+   theme(legend.position = "none",
          panel.border = element_blank(), panel.grid.major = element_blank(),
          panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
    labs(x = 'Temperature (ºC)',
@@ -407,11 +407,12 @@ estimate.plots
 #filter to only the most relavent and well characterized parameters
 All_params <- All_params %>% 
   filter(!param=="ctmin") %>%
-  filter(!param=="ctmax") %>%
+  filter(!param=="rmax") %>%
   filter(!param=="skewness") %>%
-  filter(!param=="thermal_safety_margin") %>%
+  filter(!param=="topt") %>%
   filter(!param=="thermal_tolerance") %>%
   filter(!param=="q10") %>%
+  filter(!param=="e") %>%
   filter(!param=="breadth")
   
 #view estimate plots
@@ -437,16 +438,14 @@ ggsave("output/TPC_estimates_SharpSchool_Photosynthesis.pdf", estimate.plots, dp
 
 #Plot Curve and Estimate Output
 ```{r}
+#generate a combined figure of TPCs and estimate plots
+figure <- ggarrange(TPC.plot , estimate.plots,
+                    labels = c("A", "B"),
+                    ncol = 1, nrow = 2,
+                    heights=c(1,0.5))
+figure
 
-
-
-
-
-
-
-
-
-
+ggsave("output/Photosynthesis_TPC_and_estimates.pdf", figure, dpi=300, w=6, h=8, units="in")
 
 ```
 
