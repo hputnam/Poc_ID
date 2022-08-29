@@ -1,3 +1,0 @@
-"0","#identify outliers by Temperature and Treatment groups"
-"0","outlier.plot <- ggbetweenstats(Photo,Morphology, micromol.cm2.h, outlier.tagging = TRUE)"
-"0","outlier.plot"

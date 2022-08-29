@@ -1,2 +1,0 @@
-"0","Data <- read.csv(file = 'output/1_pi_curve_rates.csv')"
-"0","#Data <- Data[1:40,]"
