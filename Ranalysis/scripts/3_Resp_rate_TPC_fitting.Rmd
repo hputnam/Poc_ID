@@ -1,5 +1,5 @@
 ---
-title: "Photosynthesis TPC fitting"
+title: "Respiration TPC fitting"
 authors: Hollie Putnam 
 edited by: Hollie Putnam 
 date: 20220829
@@ -43,7 +43,7 @@ library('furrr') ## libraries for parallel processing
 
 ## Import data
 ```{r, warning = FALSE}
-Photodata <- read.csv("data/Photo_extracted_rates.csv")
+Respdata <- read.csv("data/Resp_extracted_rates.csv")
 ```
 
 TPC fitting 
@@ -54,23 +54,26 @@ Sharpe Schoolfield 1981 model
 Schoolfield, R. M., Sharpe, P. J. H., & Magnuson, C. E. (1981). Non-linear regression of biological temperature-dependent rate models based on absolute reaction-rate theory. Journal of theoretical biology, 88(4), 719-731. https://doi.org/10.1016/0022-5193(81)90246-0
 
 ```{r}
-#Photosynthesis
-Photodata$temp <- as.numeric(Photodata$Temp.Cat)
-Photodata$micromol.cm2.h <- replace(Photodata$micromol.cm2.h, Photodata$micromol.cm2.h<0,0)
-Photodata$transformed.rate <- log10(Photodata$micromol.cm2.h+1)
+#Respiration
+Respdata$temp <- as.numeric(Respdata$Temp.Cat)
+Respdata$micromol.cm2.h <- -Respdata$micromol.cm2.h
+Respdata$micromol.cm2.h <- replace(Respdata$micromol.cm2.h, Respdata$micromol.cm2.h<0,0)
+Respdata$transformed.rate <- log10(Respdata$micromol.cm2.h+1)
 
 # choose model
 get_model_names()
 #sharpeschoolhigh_1981
 
 # get start vals
-start_vals <- get_start_vals(Photodata$temp,Photodata$transformed.rate, model_name = 'sharpeschoolhigh_1981')
+start_vals <- get_start_vals(Respdata$temp,Respdata$transformed.rate, model_name = 'sharpeschoolhigh_1981')
 
 # get limits
-low_lims <- get_lower_lims(Photodata$temp,Photodata$transformed.rate, model_name = 'sharpeschoolhigh_1981')
-upper_lims <- get_upper_lims(Photodata$temp,Photodata$transformed.rate, model_name = 'sharpeschoolhigh_1981')
+low_lims <- get_lower_lims(Respdata$temp,Respdata$transformed.rate, model_name = 'sharpeschoolhigh_1981')
+upper_lims <- get_upper_lims(Respdata$temp,Respdata$transformed.rate, model_name = 'sharpeschoolhigh_1981')
 
 #view values
+start_vals
+start_vals[3] <- 0.1
 start_vals
 low_lims
 upper_lims
@@ -79,7 +82,7 @@ upper_lims
 #GRANDIS
 ```{r}
 # grandis CURVE FIT
-d.grandis <- Photodata %>% 
+d.grandis <- Respdata %>% 
   filter(Morphology=="grandis")
 
 #fit 
@@ -151,7 +154,7 @@ grandis.CI.plot
 #MEANDRINA
 ```{r}
 # meandrina CURVE FIT
-d.meandrina <- Photodata %>% 
+d.meandrina <- Respdata %>% 
   filter(Morphology=="meandrina")
 
 #fit 
@@ -222,7 +225,7 @@ meandrina.CI.plot
 #VERRUCOSA
 ```{r}
 # verrucosa CURVE FIT
-d.verrucosa <- Photodata %>% 
+d.verrucosa <- Respdata %>% 
   filter(Morphology=="verrucosa")
 
 #fit 
@@ -295,7 +298,7 @@ verrucosa.CI.plot
 cols <- c("grandis"="orange", "meandrina"="black", "verrucosa"="cyan")
   
 # plot data and model fit
-TPC.plot <- ggplot(data=Photodata, aes(x=temp)) +
+TPC.plot <- ggplot(data=Respdata, aes(x=temp)) +
    geom_point(aes(temp, transformed.rate, color="grandis"), d.grandis, size = 2, alpha = 0.5) +
    geom_point(aes(temp, transformed.rate, color="meandrina"), d.meandrina, size = 2, alpha = 0.5) +
      geom_point(aes(temp, transformed.rate, color="verrucosa"), d.verrucosa, size = 2, alpha = 0.5) +
@@ -317,7 +320,7 @@ TPC.plot <- ggplot(data=Photodata, aes(x=temp)) +
 
 TPC.plot 
 
-ggsave("output/TPC_SharpSchool_Photosynthesis.pdf", TPC.plot, dpi=300, w=8, h=8, units="in")
+ggsave("output/TPC_SharpSchool_Respration.pdf", TPC.plot, dpi=300, w=8, h=8, units="in")
 ```
 
 # Bootstrap CI for all TPC parameters
@@ -384,7 +387,7 @@ verrucosa.ci_extra_params <- left_join(verrucosa.ci_extra_params, verrucosa.extr
 verrucosa.ci_extra_params$Treatment <- "P. verrucosa"
 ```
 
-#Join Morphology estimates and CIs
+#Join estimates and CIs
 ```{r}
 All_params <- rbind(grandis.ci_extra_params, meandrina.ci_extra_params, verrucosa.ci_extra_params)
 All_params <- All_params %>% 
@@ -402,15 +405,15 @@ estimate.plots <- ggplot(All_params, aes(Treatment, estimate, color=Treatment)) 
 estimate.plots
 
 #filter to only the most relavent and well characterized parameters
-All_params <- All_params %>% 
-  filter(!param=="ctmin") %>%
-  filter(!param=="rmax") %>%
-  filter(!param=="skewness") %>%
-  filter(!param=="topt") %>%
-  filter(!param=="thermal_tolerance") %>%
-  filter(!param=="q10") %>%
-  filter(!param=="e") %>%
-  filter(!param=="breadth")
+ All_params <- All_params %>% 
+   filter(!param=="ctmin") %>%
+   filter(!param=="ctmax") %>%
+   filter(!param=="skewness") %>%
+   filter(!param=="thermal_safety_margin") %>%
+   filter(!param=="thermal_tolerance") %>%
+   filter(!param=="q10") %>%
+   filter(!param=="eh") %>%
+   filter(!param=="breadth")
   
 #view estimate plots
 estimate.plots <- ggplot(All_params, aes(Treatment, estimate, color=Treatment)) +
@@ -430,7 +433,7 @@ estimate.plots <- ggplot(All_params, aes(Treatment, estimate, color=Treatment)) 
 
 estimate.plots
 
-ggsave("output/TPC_estimates_SharpSchool_Photosynthesis.pdf", estimate.plots, dpi=300, w=6, h=2, units="in")
+ggsave("output/TPC_estimates_SharpSchool_Respiration.pdf", estimate.plots, dpi=300, w=6, h=2, units="in")
 ``` 
 
 #Plot Curve and Estimate Output
@@ -442,6 +445,6 @@ figure <- ggarrange(TPC.plot , estimate.plots,
                     heights=c(1,0.5))
 figure
 
-ggsave("output/Photosynthesis_TPC_and_estimates.pdf", figure, dpi=300, w=6, h=8, units="in")
+ggsave("output/Respiration_TPC_and_estimates.pdf", figure, dpi=300, w=6, h=8, units="in")
 
 ```
