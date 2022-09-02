@@ -18,6 +18,7 @@ if (!require("tidyverse")) install.packages("tidyverse")
 library(tidyverse)
 ```
 
+TPC Curve Data
 #use wooden dowel standards to calculate surface area curve 
 ```{r}
 
@@ -63,5 +64,53 @@ range(stnds$surface.area.cm2)
 smpls%>%
   select(fragment_ID, surface.area.cm2)%>%
     write_csv("data/surface.area.calc.csv")
+```
+
+TPC Baseline Fragment Data
+#use wooden dowel standards to calculate surface area curve 
+```{r}
+
+#load wax data
+wax.data <- read.csv("data/TPC_surface_area_data.csv", header=TRUE)
+
+wax.data$delta.mass.g <- wax.data$weight2.g-wax.data$weight1.g
+stnds <- subset(wax.data, Sample=="Standard")
+stnds <- stnds[-1,] # the largest data point was an artifact outlier. It was removed, as it had bubbles of air escape the wooden sphere, leaving gaps in the wax
+
+#calculate the surface area of the spherical standards from the diameter
+stnds$rad <- stnds$Diameter/2
+stnds$surface.area.cm2 <- 4*pi*(stnds$rad)^2
+
+# calculate the curve coefficients for slope and intercept to apply as the standard
+stnd.curve <- lm(surface.area.cm2~delta.mass.g, data=stnds)
+plot(surface.area.cm2~delta.mass.g, data=stnds)
+stnd.curve$coefficients
+summary(stnd.curve)$r.squared #r-squared = 0.99 20220326
+
+
+```
+
+
+```{r}
+#Calculate surface area using the standard curve
+smpls <- subset(wax.data, Sample=="Coral")
+smpls$surface.area.cm2 <- stnd.curve$coefficients[2] * smpls$delta.mass.g + stnd.curve$coefficients[1]
+
+#select the samples only
+smpls <- smpls %>%
+  select(-Sample, -Diameter)
+
+smpls %>%
+  count(fragment_ID) %>% arrange(n)
+
+#check the range to make sure your samples fall within the range of the standards
+range(smpls$surface.area.cm2)
+hist(smpls$surface.area.cm2)
+range(stnds$surface.area.cm2)
+
+#Save the output for use in normilzation for phys assays
+smpls%>%
+  select(fragment_ID, surface.area.cm2)%>%
+    write_csv("data/TPC_surface.area.calc.csv")
 ```
 

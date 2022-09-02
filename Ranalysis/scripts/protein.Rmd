@@ -20,19 +20,19 @@ library(tidyverse)
 library(broom)
 ```
 
-# Import data for host protein from 
+# Import data for host protein 
 ```{r}
 # List protein data files 
-prot_path = "baseline_TPC_physio/data/TPC_total_protein/host/"                                              # Path to prot data directory
-all_prot_files <- list.files(path = prot_path, pattern = "*.csv")          # List all files in directory
-prot_platemaps <- list.files(path = prot_path, pattern = "platemap")       # List platemap files
+prot_path = "data/"  # Path to prot data directory
+all_prot_files <- list.files(path = prot_path, pattern = "*_host")          # List all files in directory
+prot_platemaps <- list.files(path = prot_path, pattern = "_host_platemap_prot")       # List platemap files
 prot_data_files <- setdiff(all_prot_files, prot_platemaps)                 # List data files
 
 # Read in all files into tibble
 df_host <- tibble(file = prot_data_files) %>%
   separate(file, into = c("trip", "date", "plate"), remove = FALSE) %>%
   unite(plate, trip, date, plate) %>%
-  dplyr::mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_platemap.csv"))),
+  dplyr::mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_platemap_prot.csv"))),
          prot_data = map(file, ~read_csv(paste0(prot_path, .)) %>% rename(well = Well)))
 
 # Merge platemap and data for each plate
@@ -101,13 +101,13 @@ std_curve_plot_host +
 # Normalize to surface area
 ```{r}
 # Surface area data
-sa <- read.csv("baseline_TPC_physio/output/surface.area.calc.csv")
+sa <- read.csv("data/TPC_surface.area.calc.csv")
 
 # Tissue homogenate volume data
-homog_vols <- read_csv("baseline_TPC_physio/data/TPC_homogenate_vols/homogenate_vols.csv") %>% select(1:3)
+homog_vols <- read_csv("data/homogenate_vols.csv") %>% select(1:3)
 
 # Coral sample metadata
-metadata <- read_csv("baseline_TPC_physio/metadata_POC_TPC.csv") %>% select(1:4)
+metadata <- read_csv("data/metadata_POC_TPC.csv") %>% select(1:4)
 
 # Join homogenate volumes and surface area with sample metadata
 metadata <- full_join(metadata, homog_vols) %>%
@@ -118,25 +118,28 @@ prot_host <- left_join(prot_host, metadata) %>%
   mutate(prot_ug = prot_ug.mL * homog_vol_ml,
          prot_ug.cm2 = prot_ug / surface.area.cm2,
          prot_mg.cm2 = prot_ug.cm2 / 1000)
+prot_host <- prot_host %>%
+  filter(species=="Pocillopora") 
+
+avg_prot_host <- prot_host %>%
+  group_by(fragment_ID,Morphology) %>%
+  summarize(prot_mg.cm2 = mean(prot_mg.cm2))
+
 ```
 
 # Plot results by species and site
 ```{r}
 # Plot all data points with mean ± se
-prot_host %>%
-  filter(!is.na(species)) %>%
-  ggplot(aes(x = species, y = prot_mg.cm2, color = species)) +
-  #facet_wrap(~species)  +
-  coord_cartesian(ylim = c(0, 1.5))+
-  labs(x = "", y = "Total protein (mg/cm2)") +
+avg_prot_host %>%
+  ggplot(aes(x = Morphology, y = prot_mg.cm2, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  coord_cartesian(ylim = c(0, 1.8))+
+  labs(x = "", y = expression("Host Soluble Protein mg"~cm^{-2})) +
   geom_jitter(width = 0.1) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", color = "black")           # Plot mean
-
-# Remove outlier data points where absorbance was super low
-prot_host <- prot_host %>%
-  filter(abs562 > 0.1)
+  stat_summary(fun = mean, geom = "point", color = "black")+           # Plot mean
+  theme_bw(base_size = 12)
 ```
 
 # Write data to output file
@@ -148,23 +151,23 @@ prot_host %>%
   summarise(prot_ug = mean(prot_ug, na.rm = T),
             prot_ug.cm2 = mean(prot_ug.cm2, na.rm = T)) %>%
   select(fragment_ID, prot_ug, prot_ug.cm2) %>%
-  write_csv(., path = "baseline_TPC_physio/output/host_protein.csv")
+  write_csv(., path = "output/host_protein.csv")
 ```
 
 
 # Import data for holobiont protein
 ```{r}
 # List protein data files 
-prot_path = "March_2022/data/4_protein/4_holobiont/"                                              # Path to prot data directory
-all_prot_files <- list.files(path = prot_path, pattern = "*.csv")          # List all files in directory
-prot_platemaps <- list.files(path = prot_path, pattern = "platemap")       # List platemap files
+prot_path = "data/"                                              # Path to prot data directory
+all_prot_files <- list.files(path = prot_path, pattern = "_holobiont")          # List all files in directory
+prot_platemaps <- list.files(path = prot_path, pattern = "_holobiont_platemap_prot")       # List platemap files
 prot_data_files <- setdiff(all_prot_files, prot_platemaps)                 # List data files
 
 # Read in all files into tibble
 df_holobiont <- tibble(file = prot_data_files) %>%
   separate(file, into = c("trip", "date", "plate"), remove = FALSE) %>%
   unite(plate, trip, date, plate) %>%
-  dplyr::mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_BCA_holobiont_platemap.csv"))),
+  dplyr::mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_platemap_prot.csv"))),
          prot_data = map(file, ~read_csv(paste0(prot_path, .)) %>% rename(well = Well)))
 
 # Merge platemap and data for each plate
@@ -231,43 +234,34 @@ std_curve_plot_holobiont +
 
 # Normalize to surface area
 ```{r}
-# Surface area data
-sa <- read.csv("March_2022/output/4_surface_area.calc.csv")
-
-# Tissue homogenate volume data
-homog_vols <- read_csv("March_2022/data/4_homogenate_vols/4_homogenate_vols.csv") %>% select(1:3)
-
-# Coral sample metadata
-  metadata <- read_csv("March_2022/4_corals_sampled.csv") %>% select(1:5)
-
-# Join homogenate volumes and surface area with sample metadata
-metadata <- full_join(metadata, homog_vols) %>%
-  full_join(sa)
 
 # Join prot data with metadata
 prot_holobiont <- left_join(prot_holobiont, metadata) %>%
   mutate(prot_ug = prot_ug.mL * homog_vol_ml,
          prot_ug.cm2 = prot_ug / surface.area.cm2,
          prot_mg.cm2 = prot_ug.cm2 / 1000)
+
+prot_holobiont <- prot_holobiont %>%
+  filter(species=="Pocillopora") 
+
+avg_prot_holobiont  <- prot_holobiont  %>%
+  group_by(fragment_ID, Morphology) %>%
+  summarize(prot_mg.cm2 = mean(prot_mg.cm2))
 ```
 
 # Plot results by species and site
 ```{r}
 # Plot all data points with mean ± se
 prot_holobiont %>%
-  filter(!is.na(species)) %>%
-  ggplot(aes(x = timepoint, y = prot_mg.cm2, color = species)) +
-  #facet_wrap(~species)  +
-  coord_cartesian(ylim = c(0, 2))+
-  labs(x = "", y = "Total protein (mg/cm2)") +
+  ggplot(aes(x = Morphology, y = prot_mg.cm2, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  coord_cartesian(ylim = c(0, 1.8))+
+  labs(x = "", y = expression("Holobiont Soluble Protein mg"~cm^{-2})) +
   geom_jitter(width = 0.1) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", color = "black")           # Plot mean
-
-# Remove outlier data points where absorbance was super low
-prot_holobiont <- prot_holobiont %>%
-  filter(abs562 > 0.1)
+  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+  theme_bw(base_size = 12)
 ```
 
 # Write data to output file
@@ -280,6 +274,6 @@ prot_holobiont %>%
             prot_ug.cm2 = mean(prot_ug.cm2, na.rm = T)) %>%
   select(fragment_ID, prot_ug, prot_ug.cm2) %>%
   mutate(timepoint="MARCH")%>%
-  write_csv(., path = "March_2022/output/4_holobiont_protein.csv")
+  write_csv(., path = "output/holobiont_protein.csv")
 ```
 

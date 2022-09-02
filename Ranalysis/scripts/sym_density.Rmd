@@ -1,0 +1,89 @@
+---
+title: "Symbiont density analysis for POC TPC"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+#Title: POC TPC
+#Project: Moorea
+#Author: HM Putnam 
+#Edited by: DM Becker-Polinski
+#Date Last Modified: 20220818
+#See Readme file for details
+
+```{r setup, include = FALSE}
+## install packages if you dont already have them
+if (!require("tidyverse")) install.packages("tidyverse")
+
+# load packages
+library(tidyverse)
+```
+
+# Import data
+```{r} 
+# Cell count data
+sym_counts <- read_csv("data/TPC_POC_symbiont_counts.csv")
+
+# Load Surface area data
+sa <- read.csv("data/TPC_surface.area.calc.csv")
+
+homog.vol <- read_csv("data/homogenate_vols.csv") %>%
+  select(fragment_ID, homog_vol_ml)
+
+# Coral sample metadata
+metadata <- read_csv("data/metadata_POC_TPC.csv")
+
+# Join homogenate volumes and surface area with sample metadata
+metadata <- full_join(metadata, homog.vol)  %>%
+  full_join(sa)
+
+```
+
+# Calculate cells per square centimeter
+```{r}
+# Calculate mean counts for each sample
+sym_counts <- sym_counts %>%
+  select(fragment_ID, Squares.Counted, matches("Count[0-9]")) %>%
+  gather("rep", "count", -fragment_ID, -Squares.Counted) %>%
+  group_by(fragment_ID, Squares.Counted) %>%
+  summarise(mean_count = mean(count, na.rm = TRUE))
+
+# Join mean counts with sample metadata
+sym_counts <- full_join(sym_counts, metadata)
+
+# Normalize counts by homogenat volume and surface area
+sym_counts <- sym_counts %>%
+  mutate(cells.mL = mean_count * 10000 / Squares.Counted,
+         cells = cells.mL * homog_vol_ml,
+         cells.cm2 = cells / surface.area.cm2)
+```
+
+
+
+# Plot data
+```{r}
+# Plot all data points with mean ± se
+sym_counts %>%
+  ggplot(aes(x = Morphology, y = cells.cm2 / 10^6, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  #coord_cartesian(ylim = c(0, 1.8))+
+  labs(x = "", y = expression("Cell Density (" *x*"10"^"6" *~cells *~ cm^"-2"*")")) +
+  geom_jitter(width = 0.1) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", color = "black", width = 0.5) +
+  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+  theme_bw(base_size = 12)
+
+```
+
+
+Output data to file.  
+
+```{r}
+sym_counts %>%
+  select(fragment_ID, Morphology, cells.cm2) %>%
+  write_csv(path = "output/sym_counts.csv")
+
+
+```

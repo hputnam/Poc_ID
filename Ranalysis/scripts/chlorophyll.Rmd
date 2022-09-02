@@ -36,9 +36,9 @@ read_chl <- function(file) {
 }
 
 # List chlorophyll data files
-chl_path <- "baseline_TPC_physio/data/TPC_chlorophyll/"                                        # Path to chlorophyll data directory
-all_chl_files <- list.files(path = chl_path, pattern = "*.csv")          # List all files in directory
-chl_platemaps <- list.files(path = chl_path, pattern = "platemap")       # List platemap files
+chl_path <- "data/"                                        # Path to chlorophyll data directory
+all_chl_files <- list.files(path = chl_path, pattern = "_Chl_data.csv")          # List all files in directory
+chl_platemaps <- list.files(path = chl_path, pattern = "Chl_platemap")       # List platemap files
 chl_data_files <- setdiff(all_chl_files, chl_platemaps)                  # List absorbance data files
 
 
@@ -78,23 +78,27 @@ df <- df %>%
   mutate(chla.ug.ml = (11.43 * adj663)/0.6 - (0.64 * adj630)/0.6,
         chlc2.ug.ml = (27.09 * adj630)/0.6 - (3.63 * adj663)/0.6)
 
-#previous, with no pathlength adjustment
-#df <- df %>%
-  #mutate(chla.ug.ml = (11.43 * adj663) - (0.64 * adj630),
-        #chlc2.ug.ml = (27.09 * adj630) - (3.63 * adj663))
 ```
 
 
 # Normalize to surface area
 ```{r}
 # Load homogenate volume
-homog.vol <- read_csv("baseline_TPC_physio/data/TPC_homogenate_vols/homogenate_vols.csv") %>%
+homog.vol <- read_csv("data/homogenate_vols.csv") %>%
   select(fragment_ID, homog_vol_ml)
+
 chl <- full_join(df, homog.vol)
 
-# Load surface area
-sa <- read_csv("baseline_TPC_physio/output/surface.area.calc.csv")
-chl <- full_join(chl, sa)
+# Load Surface area data
+sa <- read.csv("data/TPC_surface.area.calc.csv")
+
+# Coral sample metadata
+metadata <- read_csv("data/metadata_POC_TPC.csv")
+
+# Join homogenate volumes and surface area with sample metadata
+chl <- full_join(metadata, chl) %>%
+  full_join(sa) %>%
+  full_join(chl)
 
 # Multiply chlorophyll by the homogenate volume and divide by surface area
 chl <- chl %>%
@@ -106,38 +110,39 @@ chl <- filter(chl, !fragment_ID %in% c("NA", "BK"))
 
 # write chlorophyll data to file
 chl %>%
-  select(fragment_ID, chla.ug.cm2, chlc2.ug.cm2) %>%
-  mutate(timepoint="May2022")%>%
+  select(fragment_ID, Morphology,chla.ug.cm2, chlc2.ug.cm2) %>%
   filter(!is.na(chla.ug.cm2))%>%
   filter(!is.na(chlc2.ug.cm2))%>%
-  write_csv(path = "baseline_TPC_physio/output/chlorophyll.csv")
+  write_csv(path = "output/TPC_chlorophyll.csv")
 ```
 
 # Plot results by species and site
 ```{r, eval = TRUE}
-# Join with sample metadata
-meta <- read_csv("baseline_TPC_physio/metadata_POC_TPC.csv")
-chl <- right_join(chl, meta, by = "fragment_ID")
 
 # Plot chlorophyll a
 chl %>%
-  ggplot(aes(x = site , y = chla.ug.cm2, color = species)) +
-  #facet_wrap(~species) +
-  labs(x = "", y = "chlorophyll a (µg/cm2)") +
+  ggplot(aes(x = Morphology, y = chla.ug.cm2, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  coord_cartesian(ylim = c(0, 6.5))+
+  labs(x = "", y = expression("Chl-a mg"~cm^{-2})) +
   geom_jitter(width = 0.1) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", color = "black")           # Plot mean
+  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+  theme_bw(base_size = 12)
 
 # Plot chlorophyll c2
 chl %>%
-  ggplot(aes(x = site, y = chlc2.ug.cm2, color = species)) +
-  #facet_wrap(~species) +
-  labs(x = "", y = "chlorophyll c2 (µg/cm2)") +
+  ggplot(aes(x = Morphology, y = chlc2.ug.cm2, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  coord_cartesian(ylim = c(0, 6.5))+
+  labs(x = "", y = expression("Chl-c2 mg"~cm^{-2})) +
   geom_jitter(width = 0.1) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", color = "black")           # Plot mean
+  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+  theme_bw(base_size = 12)
+
 ```
 
 

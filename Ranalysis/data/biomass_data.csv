@@ -1,4 +1,4 @@
-Pan.ID,colony_id,partner,initial.mass.g,dry.pan.mass.g,burnt.pan.mass.g
+Pan.ID,fragment_ID,partner,initial.mass.g,dry.pan.mass.g,burnt.pan.mass.g
 95,POC-149,Host,1.1445,1.2122,1.2
 153,POC-149,Sym,1.1304,1.1456,1.1418
 28,POC-150,Host,1.1279,1.2022,1.1847
@@ -17,8 +17,8 @@ Pan.ID,colony_id,partner,initial.mass.g,dry.pan.mass.g,burnt.pan.mass.g
 276,POC-157,Sym,1.1182,1.1392,1.1305
 50,POC-159,Sym,1.1464,1.1798,1.1607
 96,POC-159,Host,1.1618,1.2452,1.2198
-24,POC-160,Host,1.138,1.207,1.19
-29,POC-160,Sym,1.1508,1.1692,1.1622
+24,POC-163,Host,1.138,1.207,1.19
+29,POC-163,Sym,1.1508,1.1692,1.1622
 46,POC-161,Sym,1.1402,1.1608,1.1528
 145,POC-161,Host,1.142,1.1987,1.1839
 54,POC-162,Sym,1.1459,1.1638,1.1582
