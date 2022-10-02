@@ -15,44 +15,48 @@ knitr::opts_chunk$set(echo = TRUE)
 library(sf)
 library(ggplot2)
 library(ggmap)
-library(sf)
-library(ggsn)
+# library(ggsn)
 library(tidyverse)
-library(patchwork)
+# library(patchwork)
 ```
 
 #Read in shp files
 ```{r}
 
 #geomorphic shape file extracted from Allen Coral Atlas
-Moorea <- st_read("/Users/hputnam/Downloads/Moorea_polygons/geomorphic.shp")
+Moorea <- st_read("data/Moorea_polygons/geomorphic.shp")
 #polygons outlined from around the LTER site GPS points
-LTER1 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/LTER1_small_boundary.shp")
-LTER2 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/LTER2_small_boundary.shp")
-LTER3 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/LTER3_small_boundary.shp")
-LTER4 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/LTER4_small_boundary.shp")
-LTER5 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/LTER5_small_boundary.shp")
-LTER6 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/LTER6_small_boundary.shp")
+LTER1 <- st_read("data/Moorea_polygons/LTER1_small_boundary.shp")
+LTER2 <- st_read("data/Moorea_polygons/LTER2_small_boundary.shp")
+LTER3 <- st_read("data/Moorea_polygons/LTER3_small_boundary.shp")
+LTER4 <- st_read("data/Moorea_polygons/LTER4_small_boundary.shp")
+LTER5 <- st_read("data/Moorea_polygons/LTER5_small_boundary.shp")
+LTER6 <- st_read("data/Moorea_polygons/LTER6_small_boundary.shp")
 
 #north shore potential site polygons extracted from Allen Atlas
-NS1 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/NS1_boundary.shp")
-NS2 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/NS2_boundary.shp")
-NS3 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/NS3_boundary.shp")
-NS4 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/NS4_boundary.shp")
-NS5 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/NS5_boundary.shp")
+NS1 <- st_read("data/Moorea_polygons/NS1_boundary.shp")
+NS2 <- st_read("data/Moorea_polygons/NS2_boundary.shp")
+NS3 <- st_read("data/Moorea_polygons/NS3_boundary.shp")
+NS4 <- st_read("data/Moorea_polygons/NS4_boundary.shp")
+NS5 <- st_read("data/Moorea_polygons/NS5_boundary.shp")
+
+#east
+
+#west
+
 
 #polygons made available by the MCR
-MCR <- st_read("/Users/hputnam/Downloads/Moorea_polygons/LTER_boundary.shp")
+#MCR <- st_read("data/Moorea_polygons/LTER_boundary.shp")
 
 #Moorea PGEM site polygons extracted from Allen Atlas using the PGEM map
-PGEM1 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/PGEM1_boundary.shp")
-PGEM2 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/PGEM2_boundary.shp")
-PGEM3 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/PGEM3_boundary.shp")
-PGEM4 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/PGEM4_boundary.shp")
-PGEM5 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/PGEM5_boundary.shp")
-PGEM6 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/PGEM6_boundary.shp")
-PGEM7 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/PGEM7_boundary.shp")
-PGEM8 <- st_read("/Users/hputnam/Downloads/Moorea_polygons/PGEM8_boundary.shp")
+PGEM1 <- st_read("data/Moorea_polygons/PGEM1_boundary.shp")
+PGEM2 <- st_read("data/Moorea_polygons/PGEM2_boundary.shp")
+PGEM3 <- st_read("data/Moorea_polygons/PGEM3_boundary.shp")
+PGEM4 <- st_read("data/Moorea_polygons/PGEM4_boundary.shp")
+PGEM5 <- st_read("data/Moorea_polygons/PGEM5_boundary.shp")
+PGEM6 <- st_read("data/Moorea_polygons/PGEM6_boundary.shp")
+PGEM7 <- st_read("data/Moorea_polygons/PGEM7_boundary.shp")
+PGEM8 <- st_read("data/Moorea_polygons/PGEM8_boundary.shp")
 ```
 
 #substract PGEM and LTER sites from available sites
@@ -81,7 +85,7 @@ NS5.diff <- NS5.diff
 ```{r}
 # st_sample needs a vector telling it how many samples for each site polygon
 #  here we're using # for each polygon
-set.seed(1234)
+#set.seed(1234)
 #NS1.samples <- st_sample(NS2.diff, 1, type = "random")
 #NS2.samples <- st_sample(NS2.diff, 20, type = "random")
 NS3.samples <- st_sample(NS3.diff, 1, type = "random")
@@ -175,19 +179,19 @@ MooreaSitemap <- ggplot() + geom_sf(data = Moorea) +
                               'Available'='green','Sites'='red')) +
   theme_bw()
 
-pdf("/Users/hputnam/Downloads/Moorea_polygons/transect_sites.pdf")
+pdf("output//transect_sites.pdf")
 MooreaSitemap
 dev.off()
 ```
 #Write out randomly selected site coordinates
 ```{r}
 
-st_write(NS2.samples, layer_options = "GEOMETRY=AS_XY", "/Users/hputnam/Downloads/Moorea_polygons/sites/transect.site.coords2.csv")
-st_write(NS3.samples, layer_options = "GEOMETRY=AS_XY", append = TRUE, "/Users/hputnam/Downloads/Moorea_polygons/sites/transect.site.coords3.csv")
-st_write(NS4.samples, layer_options = "GEOMETRY=AS_XY", "/Users/hputnam/Downloads/Moorea_polygons/sites/transect.site.coords4.csv")
-st_write(NS5.samples, layer_options = "GEOMETRY=AS_XY", "/Users/hputnam/Downloads/Moorea_polygons/sites/transect.site.coords5.csv")
+st_write(NS2.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords2.csv")
+st_write(NS3.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords3.csv")
+st_write(NS4.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords4.csv")
+st_write(NS5.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords5.csv")
 
-sites <- list.files(path='/Users/hputnam/Downloads/Moorea_polygons/sites/') %>%
+sites <- list.files(path=".", full.names = FALSE) %>%
   str_subset("\\.csv$")  %>%
   lapply(read_csv) %>% 
   bind_rows
@@ -195,7 +199,7 @@ sites <- list.files(path='/Users/hputnam/Downloads/Moorea_polygons/sites/') %>%
 colnames(sites) <-c("long", "lat")
 sites$site.name <- c(paste0("site"," ", rep(1:nrow(sites),each = 1)))
 
-write.csv(sites,"/Users/hputnam/Downloads/Moorea_polygons/sites/transect.site.coords.csv")
+write.csv(sites,"data/Moorea_polygons/sites/transect.site.coords.csv")
 
 
 ```
