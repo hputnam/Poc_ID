@@ -18,9 +18,6 @@ library(sf)
 library(ggplot2)
 library(tidyverse)
 
-# library(ggmap)
-# library(ggsn)
-# library(patchwork)
 ```
 
 #Read in shp files
@@ -71,59 +68,11 @@ PGEM7 <- st_read("data/Moorea_polygons/PGEM7_boundary.shp")
 PGEM8 <- st_read("data/Moorea_polygons/PGEM8_boundary.shp")
 ```
 
-#substract PGEM and LTER sites from available sites
-```{r}
-#substract the PGEM from the available sites
-#https://gis.stackexchange.com/questions/109639/reverse-clipping-erasing-in-r
-# find the 'difference', i.e. reverse of st_intersection
-# N1 <- st_difference(N1,PGEM1)
-# N2 <- N2
-# N3 <- st_difference(N3,PGEM2)
-# N4 <- N4
-# N5 <- st_difference(N5,PGEM3)
-# N6 <- N6
-# N7<- N7
-# N8 <- N8
-# N9 <- N9
-# N10 <- N10
-# N11 <- N11
-# N12 <- N12
-# N13 <- N13
-# N14 <- N14
-# N15 <- N15
-# N16 <- N16
-# N17 <- N17
-# N18 <- N18
-# 
-# 
-# #substract the LTER from the available sites
-# #https://gis.stackexchange.com/questions/109639/reverse-clipping-erasing-in-r
-# # find the 'difference', i.e. reverse of st_intersection
-# N1 <- N1
-# N2 <- N2
-# N3 <- st_difference(N3,LTER1)
-# N4 <- st_difference(N4,LTER2)
-# N5 <- N5
-# N6 <- N6
-# N7<- N7
-# N8 <- N8
-# N9 <- N9
-# N10 <- N10
-# N11 <- N11
-# N12 <- N12
-# N13 <- N13
-# N14 <- N14
-# N15 <- N15
-# N16 <- N16
-# N17 <- N17
-# N18 <- N18
-```
-
-#generate random points wihtin the available polygons
+#generate random points within the available polygons
 ```{r}
 # st_sample needs a vector telling it how many samples for each site polygon
 #  here we're using # for each polygon
-set.seed(1234)
+
 N1.samples <- st_sample(N1, 1, type = "random")
 N2.samples <- st_sample(N2, 1, type = "random")
 N3.samples <- st_sample(N3, 1, type = "random")
@@ -280,38 +229,21 @@ st_write(N15.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords15.
 st_write(N16.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords16.csv", delete_dsn=TRUE)
 st_write(N17.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords17.csv", delete_dsn=TRUE)
 st_write(N18.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords18.csv", delete_dsn=TRUE)
-         
-#don't used 
+
+#combine the points into one dataframe
 Sites <- list.files() %>%
  str_subset("\\.csv$")  %>%
   lapply(read_csv) %>% 
   bind_rows
 
 colnames(Sites) <-c("long", "lat")
-Sites$site.name <- c(paste0("site"," ", rep(1:nrow(Sites),each = 1)))
+#but this puts it in order 1,11,12,13,14... instead of 1-18
+#Sites$site.name <- c(paste0("site"," ", rep(1:nrow(Sites),each = 1)))
+#this puts it in the correct order, but is hard coded, so is only for 18 sites
+Sites$site.name <- c("site1","site10", "site11", "site12","site13", "site14", 
+                     "site15","site16", "site17", "site18", "site2", "site3",
+                     "site4", "site5", "site6","site7", "site8", "site9")
 
-```
-
-```{r}
 write_csv(Sites,"data/Moorea_polygons/sites/transect.site.coords.csv")
 ```
-
-
-AH attempt:
-```{r}
-file.list <- list.files(path='data/Moorea_polygons/sites', full.names = TRUE)
-
-library(purrr)
-
-Sites <- setNames(file.list, file.list) %>%
-  map_dfr(read_csv, .id = "sites")  %>%
-  mutate(site=sub(".*/", "", sites))
-
-colnames(sites) <-c("file", "long", "lat")
-sites$sites.name <- c(paste0("sites"," ", rep(1:nrow(sites),each = 1)))
-
-write.csv(sites,"data/Moorea_polygons/sites/transect.site.coords.csv")
-```
-
-
 
