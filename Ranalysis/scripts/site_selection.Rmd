@@ -79,6 +79,20 @@ N2 <- N2
 N3 <- st_difference(N3,PGEM2)
 N4 <- N4
 N5 <- st_difference(N5,PGEM3)
+N6 <- N6
+N7<- N7
+N8 <- N8
+N9 <- N9
+N10 <- N10
+N11 <- N11
+N12 <- N12
+N13 <- N13
+N14 <- N14
+N15 <- N15
+N16 <- N16
+N17 <- N17
+N18 <- N18
+
 
 #substract the LTER from the available sites
 #https://gis.stackexchange.com/questions/109639/reverse-clipping-erasing-in-r
@@ -87,8 +101,20 @@ N1 <- N1
 N2 <- N2
 N3 <- st_difference(N3,LTER1)
 N4 <- st_difference(N4,LTER2)
-N5. <- N5
-
+N5 <- N5
+N6 <- N6
+N7<- N7
+N8 <- N8
+N9 <- N9
+N10 <- N10
+N11 <- N11
+N12 <- N12
+N13 <- N13
+N14 <- N14
+N15 <- N15
+N16 <- N16
+N17 <- N17
+N18 <- N18
 ```
 
 #generate random points wihtin the available polygons
@@ -101,7 +127,19 @@ N2.samples <- st_sample(N2, 20, type = "random")
 N3.samples <- st_sample(N3, 1, type = "random")
 N4.samples <- st_sample(N4, 1, type = "random")
 N5.samples <- st_sample(N5, 1, type = "random")
-
+N6.samples <- st_sample(N6, 1, type = "random")
+N7.samples <- st_sample(N7, 1, type = "random")
+N8.samples <- st_sample(N8, 1, type = "random")
+N9.samples <- st_sample(N9, 1, type = "random")
+N10.samples <- st_sample(N10, 1, type = "random")
+N11.samples <- st_sample(N11, 1, type = "random")
+N12.samples <- st_sample(N12, 1, type = "random")
+N13.samples <- st_sample(N13, 1, type = "random")
+N14.samples <- st_sample(N14, 1, type = "random")
+N15.samples <- st_sample(N15, 1, type = "random")
+N16.samples <- st_sample(N16, 1, type = "random")
+N17.samples <- st_sample(N17, 1, type = "random")
+N18.samples <- st_sample(N18, 1, type = "random")
 
 #create a buffer space around the points so they must be Xm or Xkm away from each other
 #https://stackoverflow.com/questions/64391369/how-to-specify-a-minimum-distance-between-points-in-sfst-sample
@@ -177,12 +215,38 @@ MooreaSitemap <- ggplot() + geom_sf(data = Moorea) +
   geom_sf(data = N3, aes(fill="Available")) +
   geom_sf(data = N4, aes(fill="Available")) +
   geom_sf(data = N5, aes(fill="Available")) +
+  geom_sf(data = N6, aes(fill="Available")) +
+  geom_sf(data = N7, aes(fill="Available")) +
+  geom_sf(data = N8, aes(fill="Available")) +
+  geom_sf(data = N9, aes(fill="Available")) +
+  geom_sf(data = N10, aes(fill="Available")) +
+  geom_sf(data = N11, aes(fill="Available")) +
+  geom_sf(data = N12, aes(fill="Available")) +
+  geom_sf(data = N13, aes(fill="Available")) +
+  geom_sf(data = N14, aes(fill="Available")) +
+  geom_sf(data = N15, aes(fill="Available")) +
+  geom_sf(data = N16, aes(fill="Available")) +
+  geom_sf(data = N17, aes(fill="Available")) +
+  geom_sf(data = N18, aes(fill="Available")) +
   #plot randomly selected site points
   #geom_sf(data = N1.samples, aes(color = "Sites")) +
   geom_sf(data = N2.samples, aes(color = "Sites")) +
   geom_sf(data = N3.samples, aes(color = "Sites")) +
   geom_sf(data = N4.samples, aes(color = "Sites")) +
   geom_sf(data = N5.samples, aes(color = "Sites")) +
+  geom_sf(data = N6.samples, aes(color = "Sites")) +
+  geom_sf(data = N7.samples, aes(color = "Sites")) +
+  geom_sf(data = N8.samples, aes(color = "Sites")) +
+  geom_sf(data = N9.samples, aes(color = "Sites")) +
+  geom_sf(data = N10.samples, aes(color = "Sites")) +
+  geom_sf(data = N11.samples, aes(color = "Sites")) +
+  geom_sf(data = N12.samples, aes(color = "Sites")) +
+  geom_sf(data = N13.samples, aes(color = "Sites")) +
+  geom_sf(data = N14.samples, aes(color = "Sites")) +
+  geom_sf(data = N15.samples, aes(color = "Sites")) +
+  geom_sf(data = N16.samples, aes(color = "Sites")) +
+  geom_sf(data = N17.samples, aes(color = "Sites")) +
+  geom_sf(data = N18.samples, aes(color = "Sites")) +
   scale_fill_manual(name='Areas',
                      breaks=c('MCR', 'PGEM', 'Sites', 'Available'),
                      values=c('MCR'='yellow', 'PGEM'='black',
@@ -199,16 +263,29 @@ dev.off()
 st_write(N2.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords2.csv")
 st_write(N3.samples, layer_options = "GEOMETRY=AS_XY", append = TRUE, "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords3.csv")
 st_write(N4.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords4.csv")
-st_write(N5.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords5.csv"
+st_write(N5.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords5.csv")
+st_write(N6.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords6.csv")
+st_write(N7.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords7.csv")
+st_write(N8.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords8.csv")
+st_write(N9.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords9.csv")
+st_write(N10.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords10.csv")
+st_write(N11.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords11.csv")
+st_write(N12.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords12.csv")
+st_write(N13.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords13.csv")
+st_write(N14.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords14.csv")
+st_write(N15.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords15.csv")
+st_write(N16.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords16.csv")
+st_write(N17.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords17.csv")
+st_write(N18.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords18.csv")
          
 #don't used 
-#sites <- list.files(path='/data/Moorea_polygons/sites/') %>%
- # str_subset("\\.csv$")  %>%
+#Sites <- list.files(path='/data/Moorea_polygons/sites/') %>%
+ #str_subset("\\.csv$")  %>%
   #lapply(read_csv) %>% 
   #bind_rows
 
-#colnames(sites) <-c("long", "lat")
-#sites$site.name <- c(paste0("site"," ", rep(1:nrow(sites),each = 1)))
+#colnames(Sites) <-c("long", "lat")
+#Sites$site.name <- c(paste0("site"," ", rep(1:nrow(Sites),each = 1)))
 
 #write.csv(sites,"/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords.csv")
 
@@ -221,12 +298,12 @@ file.list <- list.files(path='data/Moorea_polygons/sites', full.names = TRUE)
 
 library(purrr)
 
-sites <- setNames(file.list, file.list) %>%
-  map_dfr(read_csv, .id = "site")  %>%
-  mutate(site=sub(".*/", "", site))
+Sites <- setNames(file.list, file.list) %>%
+  map_dfr(read_csv, .id = "sites")  %>%
+  mutate(site=sub(".*/", "", sites))
 
 colnames(sites) <-c("file", "long", "lat")
-sites$site.name <- c(paste0("site"," ", rep(1:nrow(sites),each = 1)))
+sites$sites.name <- c(paste0("sites"," ", rep(1:nrow(sites),each = 1)))
 
 write.csv(sites,"/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords.csv")
 ```
