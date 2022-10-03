@@ -3,6 +3,8 @@ title: "Untitled"
 author: "HM Putnam"
 date: "10/1/2022"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -260,24 +262,24 @@ dev.off()
 #Write out randomly selected site coordinates
 ```{r}
 
-st_write(N1.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords1.csv")
-st_write(N2.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords2.csv")
-st_write(N3.samples, layer_options = "GEOMETRY=AS_XY","transect.site.coords3.csv")
-st_write(N4.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords4.csv")
-st_write(N5.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords5.csv")
-st_write(N6.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords6.csv")
-st_write(N7.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords7.csv")
-st_write(N8.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords8.csv")
-st_write(N9.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords9.csv")
-st_write(N10.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords10.csv")
-st_write(N11.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords11.csv")
-st_write(N12.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords12.csv")
-st_write(N13.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords13.csv")
-st_write(N14.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords14.csv")
-st_write(N15.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords15.csv")
-st_write(N16.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords16.csv")
-st_write(N17.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords17.csv")
-st_write(N18.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords18.csv")
+st_write(N1.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords1.csv", delete_dsn=TRUE)
+st_write(N2.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords2.csv", delete_dsn=TRUE)
+st_write(N3.samples, layer_options = "GEOMETRY=AS_XY","transect.site.coords3.csv", delete_dsn=TRUE)
+st_write(N4.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords4.csv", delete_dsn=TRUE)
+st_write(N5.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords5.csv", delete_dsn=TRUE)
+st_write(N6.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords6.csv", delete_dsn=TRUE)
+st_write(N7.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords7.csv", delete_dsn=TRUE)
+st_write(N8.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords8.csv", delete_dsn=TRUE)
+st_write(N9.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords9.csv", delete_dsn=TRUE)
+st_write(N10.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords10.csv", delete_dsn=TRUE)
+st_write(N11.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords11.csv", delete_dsn=TRUE)
+st_write(N12.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords12.csv", delete_dsn=TRUE)
+st_write(N13.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords13.csv", delete_dsn=TRUE)
+st_write(N14.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords14.csv", delete_dsn=TRUE)
+st_write(N15.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords15.csv", delete_dsn=TRUE)
+st_write(N16.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords16.csv", delete_dsn=TRUE)
+st_write(N17.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords17.csv", delete_dsn=TRUE)
+st_write(N18.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords18.csv", delete_dsn=TRUE)
          
 #don't used 
 Sites <- list.files() %>%
@@ -288,12 +290,12 @@ Sites <- list.files() %>%
 colnames(Sites) <-c("long", "lat")
 Sites$site.name <- c(paste0("site"," ", rep(1:nrow(Sites),each = 1)))
 
-write.csv(Sites,"data/Moorea_polygons/sites/transect.site.coords.csv")
-
-#remove the intermediate files
-
-
 ```
+
+```{r}
+write_csv(Sites,"data/Moorea_polygons/sites/transect.site.coords.csv")
+```
+
 
 AH attempt:
 ```{r}
