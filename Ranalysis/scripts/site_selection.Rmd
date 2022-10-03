@@ -15,48 +15,58 @@ knitr::opts_chunk$set(echo = TRUE)
 library(sf)
 library(ggplot2)
 library(ggmap)
-# library(ggsn)
+library(sf)
+library(ggsn)
 library(tidyverse)
-# library(patchwork)
+library(patchwork)
 ```
 
 #Read in shp files
 ```{r}
 
 #geomorphic shape file extracted from Allen Coral Atlas
-Moorea <- st_read("data/Moorea_polygons/geomorphic.shp")
+Moorea <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons")
 #polygons outlined from around the LTER site GPS points
-LTER1 <- st_read("data/Moorea_polygons/LTER1_small_boundary.shp")
-LTER2 <- st_read("data/Moorea_polygons/LTER2_small_boundary.shp")
-LTER3 <- st_read("data/Moorea_polygons/LTER3_small_boundary.shp")
-LTER4 <- st_read("data/Moorea_polygons/LTER4_small_boundary.shp")
-LTER5 <- st_read("data/Moorea_polygons/LTER5_small_boundary.shp")
-LTER6 <- st_read("data/Moorea_polygons/LTER6_small_boundary.shp")
+LTER1 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons")
+LTER2 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons")
+LTER3 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons")
+LTER4 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons")
+LTER5 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons")
+LTER6 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons")
 
 #north shore potential site polygons extracted from Allen Atlas
-NS1 <- st_read("data/Moorea_polygons/NS1_boundary.shp")
-NS2 <- st_read("data/Moorea_polygons/NS2_boundary.shp")
-NS3 <- st_read("data/Moorea_polygons/NS3_boundary.shp")
-NS4 <- st_read("data/Moorea_polygons/NS4_boundary.shp")
-NS5 <- st_read("data/Moorea_polygons/NS5_boundary.shp")
-
-#east
-
-#west
-
+#N for everything on the island, can change after if we see problem during run
+N1 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N1_boundary.shp")
+N2 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N2_boundary.shp")
+N3 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N3_boundary.shp")
+N4 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N4_boundary.shp")
+N5 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N5_boundary.shp")
+N6 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N6_boundary.shp")
+N7 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N7_boundary.shp")
+N8 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N8_boundary.shp")
+N9 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N9_boundary.shp")
+N10 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N10_boundary.shp")
+N11 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N11_boundary.shp")
+N12 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N12_boundary.shp")
+N13 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N13_boundary.shp")
+N14 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N14_boundary.shp")
+N15 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N15_boundary.shp")
+N16 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N16_boundary.shp")
+N17 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N17_boundary.shp")
+N18 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/N18_boundary.shp")
 
 #polygons made available by the MCR
-#MCR <- st_read("data/Moorea_polygons/LTER_boundary.shp")
+MCR <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/LTER_boundary.shp")
 
 #Moorea PGEM site polygons extracted from Allen Atlas using the PGEM map
-PGEM1 <- st_read("data/Moorea_polygons/PGEM1_boundary.shp")
-PGEM2 <- st_read("data/Moorea_polygons/PGEM2_boundary.shp")
-PGEM3 <- st_read("data/Moorea_polygons/PGEM3_boundary.shp")
-PGEM4 <- st_read("data/Moorea_polygons/PGEM4_boundary.shp")
-PGEM5 <- st_read("data/Moorea_polygons/PGEM5_boundary.shp")
-PGEM6 <- st_read("data/Moorea_polygons/PGEM6_boundary.shp")
-PGEM7 <- st_read("data/Moorea_polygons/PGEM7_boundary.shp")
-PGEM8 <- st_read("data/Moorea_polygons/PGEM8_boundary.shp")
+PGEM1 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/PGEM1_boundary.shp")
+PGEM2 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/PGEM2_boundary.shp")
+PGEM3 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/PGEM3_boundary.shp")
+PGEM4 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/PGEM4_boundary.shp")
+PGEM5 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/PGEM5_boundary.shp")
+PGEM6 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/PGEM6_boundary.shp")
+PGEM7 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/PGEM7_boundary.shp")
+PGEM8 <- st_read("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/PGEM8_boundary.shp")
 ```
 
 #substract PGEM and LTER sites from available sites
@@ -64,20 +74,20 @@ PGEM8 <- st_read("data/Moorea_polygons/PGEM8_boundary.shp")
 #substract the PGEM from the available sites
 #https://gis.stackexchange.com/questions/109639/reverse-clipping-erasing-in-r
 # find the 'difference', i.e. reverse of st_intersection
-NS1.diff <- st_difference(NS1,PGEM1)
-NS2.diff <- NS2
-NS3.diff <- st_difference(NS3,PGEM2)
-NS4.diff <- NS4
-NS5.diff <- st_difference(NS5,PGEM3)
+N1 <- st_difference(N1,PGEM1)
+N2 <- N2
+N3 <- st_difference(N3,PGEM2)
+N4 <- N4
+N5 <- st_difference(N5,PGEM3)
 
 #substract the LTER from the available sites
 #https://gis.stackexchange.com/questions/109639/reverse-clipping-erasing-in-r
 # find the 'difference', i.e. reverse of st_intersection
-NS1.diff <- NS1.diff
-NS2.diff <- NS2.diff
-NS3.diff <- st_difference(NS3,LTER1)
-NS4.diff <- st_difference(NS4,LTER2)
-NS5.diff <- NS5.diff
+N1 <- N1
+N2 <- N2
+N3 <- st_difference(N3,LTER1)
+N4 <- st_difference(N4,LTER2)
+N5. <- N5
 
 ```
 
@@ -85,22 +95,22 @@ NS5.diff <- NS5.diff
 ```{r}
 # st_sample needs a vector telling it how many samples for each site polygon
 #  here we're using # for each polygon
-#set.seed(1234)
-#NS1.samples <- st_sample(NS2.diff, 1, type = "random")
-#NS2.samples <- st_sample(NS2.diff, 20, type = "random")
-NS3.samples <- st_sample(NS3.diff, 1, type = "random")
-NS4.samples <- st_sample(NS4.diff, 1, type = "random")
-NS5.samples <- st_sample(NS5.diff, 1, type = "random")
+set.seed(1234)
+N1.samples <- st_sample(N1, 1, type = "random")
+N2.samples <- st_sample(N2, 20, type = "random")
+N3.samples <- st_sample(N3, 1, type = "random")
+N4.samples <- st_sample(N4, 1, type = "random")
+N5.samples <- st_sample(N5, 1, type = "random")
 
 
 #create a buffer space around the points so they must be Xm or Xkm away from each other
 #https://stackoverflow.com/questions/64391369/how-to-specify-a-minimum-distance-between-points-in-sfst-sample
 #Random points
 
-NS2.samples <- st_sample(NS2.diff, size = 20, type="random")
-NS2.samples <- st_sf(NS2.samples)
+N2.samples <- st_sample(N2, size = 20, type="random")
+N2.samples <- st_sf(N2.samples)
 
-original <- NS2.samples # for comparison later :)
+original <- N2.samples # for comparison later :)
 
 
 i <- 1 # iterator start
@@ -109,9 +119,9 @@ buffer_size <- 1800 # minimal distance to be enforced (in units of your CRS)
 
 repeat( {
   #  create buffer around i-th point
-  buffer <- st_buffer(NS2.samples[i,], buffer_size ) 
+  buffer <- st_buffer(N2.samples[i,], buffer_size ) 
   
-  offending <- NS2.samples %>%  # start with the intersection of master points... 
+  offending <- N2.samples %>%  # start with the intersection of master points... 
     st_intersects(buffer, sparse = F) # ... and the buffer, as a vector
   
   # i-th point is not really offending - it is the origin (not to be excluded)
@@ -119,9 +129,9 @@ repeat( {
   
   # if there are any offending points left - re-assign the master points, 
   # with the offending ones excluded / this is the main pruning part :)
-  NS2.samples <- NS2.samples[!offending,] 
+  N2.samples <- N2.samples[!offending,] 
   
-  if ( i >= nrow(NS2.samples)) {
+  if ( i >= nrow(N2.samples)) {
     # the end was reached; no more points to process
     break 
   } else {
@@ -134,7 +144,7 @@ repeat( {
 
 plot(original, pch = 4, col = "grey25") # result of the st_sample()
 
-plot(NS2.samples, pch = 4, col = "red", add = T) # pruned points
+plot(N2.samples, pch = 4, col = "red", add = T) # pruned points
 
 
 
@@ -162,44 +172,64 @@ MooreaSitemap <- ggplot() + geom_sf(data = Moorea) +
   geom_sf(data = PGEM7, aes(fill="PGEM")) +
   geom_sf(data = PGEM8, aes(fill="PGEM")) +
   #plot extracted available Sites polygons
-  geom_sf(data = NS1.diff, aes(fill="Available")) +
-  geom_sf(data = NS2.diff, aes(fill="Available")) +
-  geom_sf(data = NS3.diff, aes(fill="Available")) +
-  geom_sf(data = NS4.diff, aes(fill="Available")) +
-  geom_sf(data = NS5.diff, aes(fill="Available")) +
+  geom_sf(data = N1, aes(fill="Available")) +
+  geom_sf(data = N2, aes(fill="Available")) +
+  geom_sf(data = N3, aes(fill="Available")) +
+  geom_sf(data = N4, aes(fill="Available")) +
+  geom_sf(data = N5, aes(fill="Available")) +
   #plot randomly selected site points
-  #geom_sf(data = NS1.samples, aes(color = "Sites")) +
-  geom_sf(data = NS2.samples, aes(color = "Sites")) +
-  geom_sf(data = NS3.samples, aes(color = "Sites")) +
-  geom_sf(data = NS4.samples, aes(color = "Sites")) +
-  geom_sf(data = NS5.samples, aes(color = "Sites")) +
+  #geom_sf(data = N1.samples, aes(color = "Sites")) +
+  geom_sf(data = N2.samples, aes(color = "Sites")) +
+  geom_sf(data = N3.samples, aes(color = "Sites")) +
+  geom_sf(data = N4.samples, aes(color = "Sites")) +
+  geom_sf(data = N5.samples, aes(color = "Sites")) +
   scale_fill_manual(name='Areas',
                      breaks=c('MCR', 'PGEM', 'Sites', 'Available'),
                      values=c('MCR'='yellow', 'PGEM'='black',
                               'Available'='green','Sites'='red')) +
   theme_bw()
 
-pdf("output//transect_sites.pdf")
+pdf("/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/transect_sites.pdf")
 MooreaSitemap
 dev.off()
 ```
 #Write out randomly selected site coordinates
 ```{r}
 
-st_write(NS2.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords2.csv")
-st_write(NS3.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords3.csv")
-st_write(NS4.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords4.csv")
-st_write(NS5.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords5.csv")
+st_write(N2.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords2.csv")
+st_write(N3.samples, layer_options = "GEOMETRY=AS_XY", append = TRUE, "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords3.csv")
+st_write(N4.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords4.csv")
+st_write(N5.samples, layer_options = "GEOMETRY=AS_XY", "/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords5.csv"
+         
+#don't used 
+#sites <- list.files(path='/data/Moorea_polygons/sites/') %>%
+ # str_subset("\\.csv$")  %>%
+  #lapply(read_csv) %>% 
+  #bind_rows
 
-sites <- list.files(path=".", full.names = FALSE) %>%
-  str_subset("\\.csv$")  %>%
-  lapply(read_csv) %>% 
-  bind_rows
+#colnames(sites) <-c("long", "lat")
+#sites$site.name <- c(paste0("site"," ", rep(1:nrow(sites),each = 1)))
 
-colnames(sites) <-c("long", "lat")
-sites$site.name <- c(paste0("site"," ", rep(1:nrow(sites),each = 1)))
-
-write.csv(sites,"data/Moorea_polygons/sites/transect.site.coords.csv")
+#write.csv(sites,"/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords.csv")
 
 
 ```
+
+AH attempt:
+```{r}
+file.list <- list.files(path='data/Moorea_polygons/sites', full.names = TRUE)
+
+library(purrr)
+
+sites <- setNames(file.list, file.list) %>%
+  map_dfr(read_csv, .id = "site")  %>%
+  mutate(site=sub(".*/", "", site))
+
+colnames(sites) <-c("file", "long", "lat")
+sites$site.name <- c(paste0("site"," ", rep(1:nrow(sites),each = 1)))
+
+write.csv(sites,"/Users/pierrickharnay/Dropbox/MyProjects/Poc_ID/Ranalysis/data/Moorea_polygons/sites/transect.site.coords.csv")
+```
+
+
+
