@@ -35,24 +35,24 @@ LTER6 <- st_read("data/Moorea_polygons/LTER6_small_boundary.shp")
 
 #north shore potential site polygons extracted from Allen Atlas
 #N for everything on the island, can change after if we see problem during run
-N1 <- st_read("data/Moorea_polygons/N1_boundary.shp")
-N2 <- st_read("data/Moorea_polygons/N2_boundary.shp")
-N3 <- st_read("data/Moorea_polygons/N3_boundary.shp")
-N4 <- st_read("data/Moorea_polygons/N4_boundary.shp")
-N5 <- st_read("data/Moorea_polygons/N5_boundary.shp")
-N6 <- st_read("data/Moorea_polygons/N6_boundary.shp")
-N7 <- st_read("data/Moorea_polygons/N7_boundary.shp")
-N8 <- st_read("data/Moorea_polygons/N8_boundary.shp")
-N9 <- st_read("data/Moorea_polygons/N9_boundary.shp")
-N10 <- st_read("data/Moorea_polygons/N10_boundary.shp")
-N11 <- st_read("data/Moorea_polygons/N11_boundary.shp")
-N12 <- st_read("data/Moorea_polygons/N12_boundary.shp")
-N13 <- st_read("data/Moorea_polygons/N13_boundary.shp")
-N14 <- st_read("data/Moorea_polygons/N14_boundary.shp")
-N15 <- st_read("data/Moorea_polygons/N15_boundary.shp")
-N16 <- st_read("data/Moorea_polygons/N16_boundary.shp")
-N17 <- st_read("data/Moorea_polygons/N17_boundary.shp")
-N18 <- st_read("data/Moorea_polygons/N18_boundary.shp")
+NZ1 <- st_read("data/Moorea_polygons/NZ1_boundary.shp")
+NZ2 <- st_read("data/Moorea_polygons/NZ2_boundary.shp")
+NZ3 <- st_read("data/Moorea_polygons/NZ3_boundary.shp")
+NZ4 <- st_read("data/Moorea_polygons/NZ4_boundary.shp")
+NZ5 <- st_read("data/Moorea_polygons/NZ5_boundary.shp")
+NZ6 <- st_read("data/Moorea_polygons/NZ6_boundary.shp")
+NZ7 <- st_read("data/Moorea_polygons/NZ7_boundary.shp")
+NZ8 <- st_read("data/Moorea_polygons/NZ8_boundary.shp")
+NZ9 <- st_read("data/Moorea_polygons/NZ9_boundary.shp")
+NZ10 <- st_read("data/Moorea_polygons/NZ10_boundary.shp")
+NZ11 <- st_read("data/Moorea_polygons/NZ11_boundary.shp")
+NZ12 <- st_read("data/Moorea_polygons/NZ12_boundary.shp")
+NZ13 <- st_read("data/Moorea_polygons/NZ13_boundary.shp")
+NZ14 <- st_read("data/Moorea_polygons/NZ14_boundary.shp")
+NZ15 <- st_read("data/Moorea_polygons/NZ15_boundary.shp")
+NZ16 <- st_read("data/Moorea_polygons/NZ16_boundary.shp")
+NZ17 <- st_read("data/Moorea_polygons/NZ17_boundary.shp")
+NZ18 <- st_read("data/Moorea_polygons/NZ18_boundary.shp")
 
 #polygons made available by the MCR
 #MCR <- st_read("data/Moorea_polygons/LTER_boundary.shp")
@@ -73,24 +73,24 @@ PGEM8 <- st_read("data/Moorea_polygons/PGEM8_boundary.shp")
 # st_sample needs a vector telling it how many samples for each site polygon
 #  here we're using # for each polygon
 
-N1.samples <- st_sample(N1, 1, type = "random")
-N2.samples <- st_sample(N2, 1, type = "random")
-N3.samples <- st_sample(N3, 1, type = "random")
-N4.samples <- st_sample(N4, 1, type = "random")
-N5.samples <- st_sample(N5, 1, type = "random")
-N6.samples <- st_sample(N6, 1, type = "random")
-N7.samples <- st_sample(N7, 1, type = "random")
-N8.samples <- st_sample(N8, 1, type = "random")
-N9.samples <- st_sample(N9, 1, type = "random")
-N10.samples <- st_sample(N10, 1, type = "random")
-N11.samples <- st_sample(N11, 1, type = "random")
-N12.samples <- st_sample(N12, 1, type = "random")
-N13.samples <- st_sample(N13, 1, type = "random")
-N14.samples <- st_sample(N14, 1, type = "random")
-N15.samples <- st_sample(N15, 1, type = "random")
-N16.samples <- st_sample(N16, 1, type = "random")
-N17.samples <- st_sample(N17, 1, type = "random")
-N18.samples <- st_sample(N18, 1, type = "random")
+NZ1.samples <- st_sample(NZ1, 1, type = "random")
+NZ2.samples <- st_sample(NZ2, 1, type = "random")
+NZ3.samples <- st_sample(NZ3, 1, type = "random")
+NZ4.samples <- st_sample(NZ4, 1, type = "random")
+NZ5.samples <- st_sample(NZ5, 1, type = "random")
+NZ6.samples <- st_sample(NZ6, 1, type = "random")
+NZ7.samples <- st_sample(NZ7, 1, type = "random")
+NZ8.samples <- st_sample(NZ8, 1, type = "random")
+NZ9.samples <- st_sample(NZ9, 1, type = "random")
+NZ10.samples <- st_sample(NZ10, 1, type = "random")
+NZ11.samples <- st_sample(NZ11, 1, type = "random")
+NZ12.samples <- st_sample(NZ12, 1, type = "random")
+NZ13.samples <- st_sample(NZ13, 1, type = "random")
+NZ14.samples <- st_sample(NZ14, 1, type = "random")
+NZ15.samples <- st_sample(NZ15, 1, type = "random")
+NZ16.samples <- st_sample(NZ16, 1, type = "random")
+NZ17.samples <- st_sample(NZ17, 1, type = "random")
+NZ18.samples <- st_sample(NZ18, 1, type = "random")
 
 #create a buffer space around the points so they must be Xm or Xkm away from each other
 #https://stackoverflow.com/questions/64391369/how-to-specify-a-minimum-distance-between-points-in-sfst-sample
@@ -161,43 +161,43 @@ MooreaSitemap <- ggplot() + geom_sf(data = Moorea) +
   geom_sf(data = PGEM7, aes(fill="PGEM")) +
   geom_sf(data = PGEM8, aes(fill="PGEM")) +
   #plot extracted available Sites polygons
-  geom_sf(data = N1, aes(fill="Available")) +
-  geom_sf(data = N2, aes(fill="Available")) +
-  geom_sf(data = N3, aes(fill="Available")) +
-  geom_sf(data = N4, aes(fill="Available")) +
-  geom_sf(data = N5, aes(fill="Available")) +
-  geom_sf(data = N6, aes(fill="Available")) +
-  geom_sf(data = N7, aes(fill="Available")) +
-  geom_sf(data = N8, aes(fill="Available")) +
-  geom_sf(data = N9, aes(fill="Available")) +
-  geom_sf(data = N10, aes(fill="Available")) +
-  geom_sf(data = N11, aes(fill="Available")) +
-  geom_sf(data = N12, aes(fill="Available")) +
-  geom_sf(data = N13, aes(fill="Available")) +
-  geom_sf(data = N14, aes(fill="Available")) +
-  geom_sf(data = N15, aes(fill="Available")) +
-  geom_sf(data = N16, aes(fill="Available")) +
-  geom_sf(data = N17, aes(fill="Available")) +
-  geom_sf(data = N18, aes(fill="Available")) +
+  geom_sf(data = NZ1, aes(fill="Available")) +
+  geom_sf(data = NZ2, aes(fill="Available")) +
+  geom_sf(data = NZ3, aes(fill="Available")) +
+  geom_sf(data = NZ4, aes(fill="Available")) +
+  geom_sf(data = NZ5, aes(fill="Available")) +
+  geom_sf(data = NZ6, aes(fill="Available")) +
+  geom_sf(data = NZ7, aes(fill="Available")) +
+  geom_sf(data = NZ8, aes(fill="Available")) +
+  geom_sf(data = NZ9, aes(fill="Available")) +
+  geom_sf(data = NZ10, aes(fill="Available")) +
+  geom_sf(data = NZ11, aes(fill="Available")) +
+  geom_sf(data = NZ12, aes(fill="Available")) +
+  geom_sf(data = NZ13, aes(fill="Available")) +
+  geom_sf(data = NZ14, aes(fill="Available")) +
+  geom_sf(data = NZ15, aes(fill="Available")) +
+  geom_sf(data = NZ16, aes(fill="Available")) +
+  geom_sf(data = NZ17, aes(fill="Available")) +
+  geom_sf(data = NZ18, aes(fill="Available")) +
   #plot randomly selected site points
-  geom_sf(data = N1.samples, aes(color = "Sites")) +
-  geom_sf(data = N2.samples, aes(color = "Sites")) +
-  geom_sf(data = N3.samples, aes(color = "Sites")) +
-  geom_sf(data = N4.samples, aes(color = "Sites")) +
-  geom_sf(data = N5.samples, aes(color = "Sites")) +
-  geom_sf(data = N6.samples, aes(color = "Sites")) +
-  geom_sf(data = N7.samples, aes(color = "Sites")) +
-  geom_sf(data = N8.samples, aes(color = "Sites")) +
-  geom_sf(data = N9.samples, aes(color = "Sites")) +
-  geom_sf(data = N10.samples, aes(color = "Sites")) +
-  geom_sf(data = N11.samples, aes(color = "Sites")) +
-  geom_sf(data = N12.samples, aes(color = "Sites")) +
-  geom_sf(data = N13.samples, aes(color = "Sites")) +
-  geom_sf(data = N14.samples, aes(color = "Sites")) +
-  geom_sf(data = N15.samples, aes(color = "Sites")) +
-  geom_sf(data = N16.samples, aes(color = "Sites")) +
-  geom_sf(data = N17.samples, aes(color = "Sites")) +
-  geom_sf(data = N18.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ1.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ2.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ3.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ4.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ5.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ6.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ7.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ8.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ9.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ10.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ11.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ12.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ13.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ14.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ15.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ16.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ17.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ18.samples, aes(color = "Sites")) +
   scale_fill_manual(name='Areas',
                      breaks=c('MCR', 'PGEM', 'Sites', 'Available'),
                      values=c('MCR'='yellow', 'PGEM'='black',
@@ -211,24 +211,24 @@ dev.off()
 #Write out randomly selected site coordinates
 ```{r}
 
-st_write(N1.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords1.csv", delete_dsn=TRUE)
-st_write(N2.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords2.csv", delete_dsn=TRUE)
-st_write(N3.samples, layer_options = "GEOMETRY=AS_XY","transect.site.coords3.csv", delete_dsn=TRUE)
-st_write(N4.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords4.csv", delete_dsn=TRUE)
-st_write(N5.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords5.csv", delete_dsn=TRUE)
-st_write(N6.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords6.csv", delete_dsn=TRUE)
-st_write(N7.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords7.csv", delete_dsn=TRUE)
-st_write(N8.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords8.csv", delete_dsn=TRUE)
-st_write(N9.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords9.csv", delete_dsn=TRUE)
-st_write(N10.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords10.csv", delete_dsn=TRUE)
-st_write(N11.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords11.csv", delete_dsn=TRUE)
-st_write(N12.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords12.csv", delete_dsn=TRUE)
-st_write(N13.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords13.csv", delete_dsn=TRUE)
-st_write(N14.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords14.csv", delete_dsn=TRUE)
-st_write(N15.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords15.csv", delete_dsn=TRUE)
-st_write(N16.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords16.csv", delete_dsn=TRUE)
-st_write(N17.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords17.csv", delete_dsn=TRUE)
-st_write(N18.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords18.csv", delete_dsn=TRUE)
+st_write(NZ1.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords1.csv", delete_dsn=TRUE)
+st_write(NZ2.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords2.csv", delete_dsn=TRUE)
+st_write(NZ3.samples, layer_options = "GEOMETRY=AS_XY","transect.site.coords3.csv", delete_dsn=TRUE)
+st_write(NZ4.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords4.csv", delete_dsn=TRUE)
+st_write(NZ5.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords5.csv", delete_dsn=TRUE)
+st_write(NZ6.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords6.csv", delete_dsn=TRUE)
+st_write(NZ7.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords7.csv", delete_dsn=TRUE)
+st_write(NZ8.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords8.csv", delete_dsn=TRUE)
+st_write(NZ9.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords9.csv", delete_dsn=TRUE)
+st_write(NZ10.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords10.csv", delete_dsn=TRUE)
+st_write(NZ11.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords11.csv", delete_dsn=TRUE)
+st_write(NZ12.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords12.csv", delete_dsn=TRUE)
+st_write(NZ13.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords13.csv", delete_dsn=TRUE)
+st_write(NZ14.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords14.csv", delete_dsn=TRUE)
+st_write(NZ15.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords15.csv", delete_dsn=TRUE)
+st_write(NZ16.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords16.csv", delete_dsn=TRUE)
+st_write(NZ17.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords17.csv", delete_dsn=TRUE)
+st_write(NZ18.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords18.csv", delete_dsn=TRUE)
 
 #combine the points into one dataframe
 Sites <- list.files() %>%
