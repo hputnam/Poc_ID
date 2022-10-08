@@ -1,0 +1,607 @@
+---
+title: "Phys_Variables"
+author: "HM Putnam"
+date: "10/8/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+## install packages if you dont already have them
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("plotrix")) install.packages("plotrix")
+if (!require("broom")) install.packages("broom")
+if (!require("gridExtra")) install.packages("gridExtra")
+
+# load packages
+library(tidyverse)
+library(plotrix)
+library(broom)
+library(gridExtra)
+```
+
+# Biomass
+```{r }
+#Read in biomass data
+Data <- read.csv("data/biomass_data.csv")
+Data <- na.omit(Data)
+
+# calculated mass per ml
+#different volumes for sym (4ml) and host (5ml)
+sym <- 4
+host <- 5
+
+#Load tissue homogenate volume
+homog_vol <- read.csv("data/homogenate_vols.csv", header=TRUE)
+
+# Load Surface area data
+sa <- read.csv("data/TPC_surface.area.calc.csv")
+
+# Coral sample metadata
+metadata <- read_csv("data/metadata_POC_TPC.csv")
+
+# Join homogenate volumes and surface area with sample metadata
+metadata <- full_join(metadata, homog_vol) %>%
+  full_join(sa)
+
+#Standardize for volume input
+Data <- Data %>%
+  mutate(dry.pan.mass.g.ml = case_when(partner=="Sym" ~ dry.pan.mass.g/sym, partner=="Host" ~dry.pan.mass.g/host),
+         burnt.pan.mass.g.ml = case_when(partner=="Sym" ~ burnt.pan.mass.g/sym, partner=="Host" ~burnt.pan.mass.g/host))
+
+# Standardize for the total homogenate volume
+Data <- left_join(Data, homog_vol)  %>%
+  mutate(dry.pan.mass.g.vol.corr = dry.pan.mass.g.ml*homog_vol_ml, 
+         burnt.pan.mass.g.vol.corr = burnt.pan.mass.g.ml*homog_vol_ml)
+
+# Calculate Dry Biomass
+dw <- left_join(Data, metadata) %>%
+  mutate(dry.bioimass.g = (dry.pan.mass.g.vol.corr - initial.mass.g),
+         DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2)
+
+# Calculate AFDW
+afdw <- left_join(Data, metadata) %>%
+  mutate(dry.bioimass.g = (dry.pan.mass.g.vol.corr - burnt.pan.mass.g.vol.corr),
+         AFDW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2)
+
+
+```
+
+# Summarize AFDW and Dry Biomass data and Output to .csv.  
+```{r}
+afdw<-afdw %>%
+  group_by(fragment_ID, partner)%>%
+  summarise(AFDW.mg.cm2=mean(AFDW.mg.cm2))%>%
+  left_join(.,metadata)%>% #add metadata back into file
+  select(fragment_ID, partner, Morphology, AFDW.mg.cm2)
+
+dw<-dw %>% 
+  group_by(fragment_ID, partner)%>%
+  summarise(DW.mg.cm2=mean(DW.mg.cm2))%>%
+  left_join(.,metadata)%>% #add metadata back into file
+  select(fragment_ID, partner, Morphology, DW.mg.cm2) 
+  
+output<-left_join(afdw,dw)%>%
+  write_csv(path = "output/biomass.csv")
+```
+
+# Plot Dry Biomass
+```{r}
+# Plot all data points with mean ± se
+Dry.Biomass <- dw %>%
+  ggplot(aes(x = Morphology, y = DW.mg.cm2, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  #coord_cartesian(ylim = c(0, 1.8))+
+  labs(x = "", y = expression("Dry Biomass mg"~cm^{-2})) +
+  geom_jitter(width = 0.1) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", color = "black", width = 0.5) +
+  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+  theme_bw(base_size = 12)+ theme(legend.position="none")+
+  facet_wrap("partner",
+             labeller = labeller(partner = 
+    c("Host" = "Coral",
+      "Sym" = "Symbiont"))) 
+Dry.Biomass 
+```
+# Plot AFDW
+```{r}
+
+# Plot all data points with mean ± se
+AFDW <- afdw %>%
+  ggplot(aes(x = Morphology, y = AFDW.mg.cm2, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  #coord_cartesian(ylim = c(0, 5))+
+  labs(x = "", y = expression("AFDW mg"~cm^{-2})) +
+  geom_jitter(width = 0.1) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", color = "black", width = 0.5) +
+  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+  theme_bw(base_size = 12)+ theme(legend.position="none")+
+  facet_wrap("partner",
+             labeller = labeller(partner = 
+    c("Host" = "Coral",
+      "Sym" = "Symbiont"))) 
+AFDW
+```
+
+#Chlorophyll
+```{r}
+# Define function to read in chl data
+read_chl <- function(file) {
+  chl_data <- read_csv(file, skip = 24, n_max = 24) %>%
+    select(-1) %>%
+    magrittr::set_colnames(c("row", 1:12, "wavelength")) %>%
+    fill(row) %>%
+    gather("col", "absorbance", -wavelength, -row) %>%
+    unite("well", c(row, col), sep = "")
+}
+
+# List chlorophyll data files
+chl_path <- "data/"                                        # Path to chlorophyll data directory
+all_chl_files <- list.files(path = chl_path, pattern = "_Chl_data.csv")          # List all files in directory
+chl_platemaps <- list.files(path = chl_path, pattern = "Chl_platemap")       # List platemap files
+chl_data_files <- setdiff(all_chl_files, chl_platemaps)                  # List absorbance data files
+
+
+# Read in all files into tibble
+df <- tibble(file = chl_data_files) %>%
+  mutate(platemap = map(file, ~ read_csv(paste0(chl_path, tools::file_path_sans_ext(.), "_platemap.csv"))),
+         chl_data = map(file, ~ read_chl(paste0(chl_path, .))))
+
+# Merge platemap and data for each plate
+df <- df %>%
+  mutate(merged = map2(platemap, chl_data, ~ right_join(.x, .y)))
+```
+
+# Calculate chlorophyll concentrations
+```{r}
+# average all technical replicates for each plate/sample/wavelength, including all acetone blanks together (per plate)
+df <- df %>%
+  unnest(merged) %>%
+  filter(!is.na(fragment_ID)) %>%                         # remove empty wells (fragment_ID is NA)
+  group_by(file, fragment_ID, wavelength) %>%
+  summarise(n = n(), mean_abs = mean(absorbance)) %>%
+  spread(wavelength, mean_abs)
+
+# get the acetone blank 750 absorbace for each file (i.e., plate), and subtract from 630 and 663 values for each sample
+df <- df %>%
+  group_by(file) %>%
+  mutate(blank750 = `750`[fragment_ID == "BK"]) %>%
+  ungroup() %>%
+  mutate(adj630 = `630` - blank750,
+         adj663 = `663` - blank750)
+
+# calculate chla and chlc2 values based on equations from Jeffrey and Humphrey 1975
+# chla = (11.43 * adj663) - (0.64 * adj630)
+# chlc2 =  (27.09 * adj630) - (3.63 * adj663)
+# units µg/ml
+#path length adjustment = 0.6 
+
+df <- df %>%
+  mutate(chla.ug.ml = (11.43 * adj663)/0.6 - (0.64 * adj630)/0.6,
+        chlc2.ug.ml = (27.09 * adj630)/0.6 - (3.63 * adj663)/0.6)
+
+```
+
+# Normalize chl to surface area
+```{r}
+# Load homogenate volume
+homog.vol <- read_csv("data/homogenate_vols.csv") %>%
+  select(fragment_ID, homog_vol_ml)
+
+chl <- full_join(df, homog.vol)
+
+# Load Surface area data
+sa <- read.csv("data/TPC_surface.area.calc.csv")
+
+# Coral sample metadata
+metadata <- read_csv("data/metadata_POC_TPC.csv")
+
+# Join homogenate volumes and surface area with sample metadata
+chl <- full_join(metadata, chl) %>%
+  full_join(sa) %>%
+  full_join(chl)
+
+# Multiply chlorophyll by the homogenate volume and divide by surface area
+chl <- chl %>%
+  mutate(chla.ug.cm2 = chla.ug.ml * homog_vol_ml / surface.area.cm2,
+         chlc2.ug.cm2 = chlc2.ug.ml * homog_vol_ml / surface.area.cm2)
+
+# remove blanks and NAs
+chl <- filter(chl, !fragment_ID %in% c("NA", "BK"))
+
+# write chlorophyll data to file
+chl %>%
+  select(fragment_ID, Morphology,chla.ug.cm2, chlc2.ug.cm2) %>%
+  filter(!is.na(chla.ug.cm2))%>%
+  filter(!is.na(chlc2.ug.cm2))%>%
+  write_csv(path = "output/TPC_chlorophyll.csv")
+```
+
+# Plot results by species and site
+```{r, eval = TRUE}
+
+chl.all <- chl %>% pivot_longer(cols= chla.ug.cm2:chlc2.ug.cm2 ,
+                                values_to="chl.ug.cm2") 
+
+Chl <- chl.all %>%
+  ggplot(aes(x = Morphology, y = chl.ug.cm2, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  #coord_cartesian(ylim = c(0, 5))+
+  labs(x = "", y = expression("Chl mg"~cm^{-2})) +
+  geom_jitter(width = 0.1) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", color = "black", width = 0.5) +
+  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+  theme_bw(base_size = 12)+ theme(legend.position="none")+
+  facet_wrap("name",
+             labeller = labeller(name = 
+    c("chla.ug.cm2" = "Chl-a",
+      "chlc2.ug.cm2" = "Chl-c2"))) 
+Chl
+```
+
+#Sym Density
+# Import data
+```{r} 
+# Cell count data
+sym_counts <- read_csv("data/TPC_POC_symbiont_counts.csv")
+
+# Load Surface area data
+sa <- read.csv("data/TPC_surface.area.calc.csv")
+
+homog.vol <- read_csv("data/homogenate_vols.csv") %>%
+  select(fragment_ID, homog_vol_ml)
+
+# Coral sample metadata
+metadata <- read_csv("data/metadata_POC_TPC.csv")
+
+# Join homogenate volumes and surface area with sample metadata
+metadata <- full_join(metadata, homog.vol)  %>%
+  full_join(sa)
+
+```
+
+# Calculate cells per square centimeter
+```{r}
+# Calculate mean counts for each sample
+sym_counts <- sym_counts %>%
+  select(fragment_ID, Squares.Counted, matches("Count[0-9]")) %>%
+  gather("rep", "count", -fragment_ID, -Squares.Counted) %>%
+  group_by(fragment_ID, Squares.Counted) %>%
+  summarise(mean_count = mean(count, na.rm = TRUE))
+
+# Join mean counts with sample metadata
+sym_counts <- full_join(sym_counts, metadata)
+
+# Normalize counts by homogenat volume and surface area
+sym_counts <- sym_counts %>%
+  mutate(cells.mL = mean_count * 10000 / Squares.Counted,
+         cells = cells.mL * homog_vol_ml,
+         cells.cm2 = cells / surface.area.cm2)
+```
+
+
+
+# Plot data
+```{r}
+# Plot all data points with mean ± se
+sym_counts$partner <- "Holobiont"
+Sym <- sym_counts %>%
+  ggplot(aes(x = Morphology, y = cells.cm2 / 10^6, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  #coord_cartesian(ylim = c(0, 1.8))+
+  labs(x = "", y = expression("Cell Density (" *x*"10"^"6" *~cells *~ cm^"-2"*")")) +
+  geom_jitter(width = 0.1) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", color = "black", width = 0.5) +
+  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+  theme_bw(base_size = 12)+
+  facet_wrap("partner",
+             labeller = labeller(name = 
+    c("Holobiont" = "Holobiont"))) 
+Sym
+```
+
+
+Output data to file.  
+
+```{r}
+sym_counts %>%
+  select(fragment_ID, Morphology, cells.cm2) %>%
+  write_csv(path = "output/sym_counts.csv")
+
+
+```
+
+#Protein
+# Import data for host protein 
+```{r}
+# List protein data files 
+prot_path = "data/"  # Path to prot data directory
+all_prot_files <- list.files(path = prot_path, pattern = "*_host")          # List all files in directory
+prot_platemaps <- list.files(path = prot_path, pattern = "_host_platemap_prot")       # List platemap files
+prot_data_files <- setdiff(all_prot_files, prot_platemaps)                 # List data files
+
+# Read in all files into tibble
+df_host <- tibble(file = prot_data_files) %>%
+  separate(file, into = c("trip", "date", "plate"), remove = FALSE) %>%
+  unite(plate, trip, date, plate) %>%
+  dplyr::mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_platemap_prot.csv"))),
+         prot_data = map(file, ~read_csv(paste0(prot_path, .)) %>% rename(well = Well)))
+
+# Merge platemap and data for each plate
+df_host <- df_host %>%
+  mutate(merged = map2(platemap, prot_data, ~ right_join(.x, .y)))
+```
+
+# Plot standard curve
+```{r}
+# Create standard curve following kit instructions
+standards_host <- tribble(
+  ~std, ~BSA_ug.mL,
+  "A",        2000,
+  "B",        1500,
+  "C",        1000,
+  "D",         750,
+  "E",         500,
+  "F",         250,
+  "G",         125,
+  "H",          25,
+  "I",           0
+)
+
+std_curve_host <- df_host %>%
+  unnest(merged) %>%
+  filter(grepl("Standard", fragment_ID)) %>%
+  select(plate, well, fragment_ID, abs562 = `562:562`) %>%
+  rename(std = fragment_ID) %>%
+  mutate(std = str_sub(std, 9, 9)) %>%
+  #group_by(std) %>%
+  #summarise(abs562 = mean(abs562)) %>%                       # calculate mean of standard duplicates
+  #mutate(abs562.adj = abs562 - abs562[std == "I"]) %>%       # subtract blank absorbace value from all
+  left_join(standards_host)
+
+
+## Fit nonlinear model for standard curve
+mod_host <- nls(formula = BSA_ug.mL ~ z + a * exp(b * abs562), start = list(z = 0, a = 1, b = 1), data = std_curve_host)
+fitted_host <- mod_host %>% broom::augment()
+
+# Plot standard curve
+std_curve_plot_host <- std_curve_host %>%
+  ggplot(aes(x = abs562, y = BSA_ug.mL)) +
+  geom_point(color = "red", size = 3) 
+
+std_curve_plot_host + 
+  geom_line(data = fitted_host, aes(x = abs562, y = .fitted)) +
+  labs(title = "Standard curve")
+```
+
+# Calculate protein concentrations
+```{r}
+# Calculate protein concentration for all samples using standard curve
+prot_host <- df_host %>%
+  unnest(merged) %>%
+  filter(!grepl("Standard", fragment_ID)) %>%                     # Get just samples (not standards)
+  select(plate, well, fragment_ID, abs562 = `562:562`) %>%        # Select only needed columns
+  filter(!is.na(fragment_ID)) %>%                                 # Filter out empty wells
+  filter(fragment_ID != "BK") %>%                                 # Filter out blank wells
+  mutate(prot_ug.mL = map_dbl(abs562, ~ predict(mod_host, newdata = data.frame(abs562 = .))))    # Use standard curve to convert absorbance to protein
+
+std_curve_plot_host + 
+  geom_point(data = prot_host, aes(x = abs562, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
+  labs(title = "All samples projected on standard curve")
+```
+
+# Normalize to surface area
+```{r}
+# Surface area data
+sa <- read.csv("data/TPC_surface.area.calc.csv")
+
+# Tissue homogenate volume data
+homog_vols <- read_csv("data/homogenate_vols.csv") %>% select(1:3)
+
+# Coral sample metadata
+metadata <- read_csv("data/metadata_POC_TPC.csv") %>% select(1:4)
+
+# Join homogenate volumes and surface area with sample metadata
+metadata <- full_join(metadata, homog_vols) %>%
+  full_join(sa)
+
+# Join prot data with metadata
+prot_host <- left_join(prot_host, metadata) %>%
+  mutate(prot_ug = prot_ug.mL * homog_vol_ml,
+         prot_ug.cm2 = prot_ug / surface.area.cm2,
+         prot_mg.cm2 = prot_ug.cm2 / 1000)
+prot_host <- prot_host %>%
+  filter(species=="Pocillopora") 
+
+avg_prot_host <- prot_host %>%
+  group_by(fragment_ID,Morphology) %>%
+  summarize(prot_mg.cm2 = mean(prot_mg.cm2))
+
+```
+
+# Plot results by species and site
+```{r}
+# Plot all data points with mean ± se
+avg_prot_host %>%
+  ggplot(aes(x = Morphology, y = prot_mg.cm2, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  coord_cartesian(ylim = c(0, 1.8))+
+  labs(x = "", y = expression("Host Soluble Protein mg"~cm^{-2})) +
+  geom_jitter(width = 0.1) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", color = "black", width = 0.5) +
+  stat_summary(fun = mean, geom = "point", color = "black")+           # Plot mean
+  theme_bw(base_size = 12)
+```
+
+# Write data to output file
+```{r}
+# Write protein data to output file
+prot_host %>%
+  filter(!is.na(species)) %>%
+  group_by(fragment_ID) %>%
+  summarise(prot_ug = mean(prot_ug, na.rm = T),
+            prot_ug.cm2 = mean(prot_ug.cm2, na.rm = T)) %>%
+  select(fragment_ID, prot_ug, prot_ug.cm2) %>%
+  write_csv(., path = "output/host_protein.csv")
+```
+
+
+# Import data for holobiont protein
+```{r}
+# List protein data files 
+prot_path = "data/"                                              # Path to prot data directory
+all_prot_files <- list.files(path = prot_path, pattern = "_holobiont")          # List all files in directory
+prot_platemaps <- list.files(path = prot_path, pattern = "_holobiont_platemap_prot")       # List platemap files
+prot_data_files <- setdiff(all_prot_files, prot_platemaps)                 # List data files
+
+# Read in all files into tibble
+df_holobiont <- tibble(file = prot_data_files) %>%
+  separate(file, into = c("trip", "date", "plate"), remove = FALSE) %>%
+  unite(plate, trip, date, plate) %>%
+  dplyr::mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_platemap_prot.csv"))),
+         prot_data = map(file, ~read_csv(paste0(prot_path, .)) %>% rename(well = Well)))
+
+# Merge platemap and data for each plate
+df_holobiont <- df_holobiont %>%
+  mutate(merged = map2(platemap, prot_data, ~ right_join(.x, .y)))
+```
+
+# Plot standard curve
+```{r}
+# Create standard curve following kit instructions
+standards_holobiont <- tribble(
+  ~std, ~BSA_ug.mL,
+  "A",        2000,
+  "B",        1500,
+  "C",        1000,
+  "D",         750,
+  "E",         500,
+  "F",         250,
+  "G",         125,
+  "H",          25,
+  "I",           0
+)
+
+std_curve_holobiont <- df_holobiont %>%
+  unnest(merged) %>%
+  filter(grepl("Standard", fragment_ID)) %>%
+  select(plate, well, fragment_ID, abs562 = `562:562`) %>%
+  rename(std = fragment_ID) %>%
+  mutate(std = str_sub(std, 9, 9)) %>%
+  #group_by(std) %>%
+  #summarise(abs562 = mean(abs562)) %>%                       # calculate mean of standard duplicates
+  #mutate(abs562.adj = abs562 - abs562[std == "I"]) %>%       # subtract blank absorbace value from all
+  left_join(standards_holobiont)
+
+## Fit nonlinear model for standard curve
+mod_holobiont <- nls(formula = BSA_ug.mL ~ z + a * exp(b * abs562), start = list(z = 0, a = 1, b = 1), data = std_curve_holobiont)
+fitted_holobiont <- mod_holobiont %>% broom::augment()
+
+# Plot standard curve
+std_curve_plot_holobiont <- std_curve_holobiont %>%
+  ggplot(aes(x = abs562, y = BSA_ug.mL)) +
+  geom_point(color = "red", size = 3) 
+
+std_curve_plot_holobiont + 
+  geom_line(data = fitted_holobiont, aes(x = abs562, y = .fitted)) +
+  labs(title = "Standard curve")
+```
+
+# Calculate protein concentrations
+```{r}
+# Calculate protein concentration for all samples using standard curve
+prot_holobiont <- df_holobiont %>%
+  unnest(merged) %>%
+  filter(!grepl("Standard", fragment_ID)) %>%                     # Get just samples (not standards)
+  select(plate, well, fragment_ID, abs562 = `562:562`) %>%        # Select only needed columns
+  filter(!is.na(fragment_ID)) %>%                                 # Filter out empty wells
+  filter(fragment_ID != "BK") %>%                                 # Filter out blank wells
+  mutate(prot_ug.mL = map_dbl(abs562, ~ predict(mod_holobiont, newdata = data.frame(abs562 = .))))    # Use standard curve to convert absorbance to protein
+
+std_curve_plot_holobiont + 
+  geom_point(data = prot_holobiont, aes(x = abs562, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
+  labs(title = "All samples projected on standard curve")
+```
+
+# Normalize to surface area
+```{r}
+
+# Join prot data with metadata
+prot_holobiont <- left_join(prot_holobiont, metadata) %>%
+  mutate(prot_ug = prot_ug.mL * homog_vol_ml,
+         prot_ug.cm2 = prot_ug / surface.area.cm2,
+         prot_mg.cm2 = prot_ug.cm2 / 1000)
+
+prot_holobiont <- prot_holobiont %>%
+  filter(species=="Pocillopora") 
+
+avg_prot_holobiont  <- prot_holobiont  %>%
+  group_by(fragment_ID, Morphology) %>%
+  summarize(prot_mg.cm2 = mean(prot_mg.cm2))
+```
+
+# Plot results by species and site
+```{r}
+# Plot all data points with mean ± se
+prot_holobiont %>%
+  ggplot(aes(x = Morphology, y = prot_mg.cm2, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  coord_cartesian(ylim = c(0, 1.8))+
+  labs(x = "", y = expression("Holobiont Soluble Protein mg"~cm^{-2})) +
+  geom_jitter(width = 0.1) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", color = "black", width = 0.5) +
+  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+  theme_bw(base_size = 12) +theme(legend.position="none")
+```
+
+# Write data to output file
+```{r}
+# Write protein data to output file
+prot_holobiont %>%
+  filter(!is.na(species)) %>%
+  group_by(fragment_ID) %>%
+  summarise(prot_ug = mean(prot_ug, na.rm = T),
+            prot_ug.cm2 = mean(prot_ug.cm2, na.rm = T)) %>%
+  select(fragment_ID, prot_ug, prot_ug.cm2) %>%
+  mutate(timepoint="MARCH")%>%
+  write_csv(., path = "output/holobiont_protein.csv")
+```
+
+#Plot together
+```{r}
+avg_prot_holobiont$partner <- "Holobiont"
+avg_prot_host$partner <- "Host"
+prot.all <- rbind(avg_prot_holobiont, avg_prot_host)
+
+Prot <- prot.all %>%
+  ggplot(aes(x = Morphology, y = prot_mg.cm2, color = Morphology)) +
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  #coord_cartesian(ylim = c(0, 5))+
+  labs(x = "", y = expression("Soluble Protein mg"~cm^{-2})) +
+  geom_jitter(width = 0.1) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", color = "black", width = 0.5) +
+  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+  theme_bw(base_size = 12)+ theme(legend.position="none")+
+  facet_wrap("partner",
+             labeller = labeller(name = 
+    c("Holobiont" = "Holobiont",
+      "Host" = "Host"))) 
+Prot
+```
+#Plot all Phys
+```{r}
+grid.arrange(Dry.Biomass,AFDW,Prot,
+         Chl, Sym, nrow = 2)
+
+ g <- arrangeGrob(Dry.Biomass,AFDW,Prot,
+         Chl, Sym, nrow = 2) #generates g
+ ggsave(file= "output/Phys.pdf", g, width=12) #saves g
+```
