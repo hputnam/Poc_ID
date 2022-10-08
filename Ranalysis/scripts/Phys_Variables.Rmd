@@ -603,5 +603,5 @@ grid.arrange(Dry.Biomass,AFDW,Prot,
 
  g <- arrangeGrob(Dry.Biomass,AFDW,Prot,
          Chl, Sym, nrow = 2) #generates g
- ggsave(file= "output/Phys.pdf", g, width=12) #saves g
+ ggsave(file= "output/Phys.pdf", g, width=16, height=6) #saves g
 ```
