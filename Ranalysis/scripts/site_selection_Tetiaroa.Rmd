@@ -1,0 +1,172 @@
+---
+title: "Untitled"
+author: "HM Putnam"
+date: "10/1/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Load Libraries
+```{r}
+#https://stackoverflow.com/questions/63653396/specific-number-of-points-within-each-polygon-of-a-shape-in-r
+library(sf)
+library(ggplot2)
+library(tidyverse)
+
+```
+
+#Read in shp files
+```{r}
+
+#geomorphic shape file extracted from Allen Coral Atlas
+Tetiaroa <- st_read("data/Tetiaroa_polygons/Tetiaroa_geomorphic.shp")
+
+#polygons from ZPR
+ZPR <- st_read("data/Tetiaroa_polygons/ZPRTETIA_boundary.shp")
+
+#north shore potential site polygons extracted from Allen Atlas
+#N for everything on the island, can change after if we see problem during run
+NZ20 <- st_read("data/Tetiaroa_polygons/NZ20_boundary.shp")
+NZ21 <- st_read("data/Tetiaroa_polygons/NZ21_boundary.shp")
+NZ22 <- st_read("data/Tetiaroa_polygons/NZ22_boundary.shp")
+#NZ23 <- st_read("data/Tetiaroa_polygons/NZ23_boundary.shp")
+NZ24 <- st_read("data/Tetiaroa_polygons/NZ24_boundary.shp")
+NZ25 <- st_read("data/Tetiaroa_polygons/NZ25_boundary.shp")
+NZ26 <- st_read("data/Tetiaroa_polygons/NZ26_boundary.shp")
+NZ27 <- st_read("data/Tetiaroa_polygons/NZ27_boundary.shp")
+NZ28 <- st_read("data/Tetiaroa_polygons/NZ28_boundary.shp")
+NZ29 <- st_read("data/Tetiaroa_polygons/NZ29_boundary.shp")
+
+```
+
+#generate random points within the available polygons
+```{r}
+# st_sample needs a vector telling it how many samples for each site polygon
+#  here we're using # for each polygon
+
+NZ20.samples <- st_sample(NZ20, 1, type = "random")
+NZ21.samples <- st_sample(NZ21, 1, type = "random")
+NZ22.samples <- st_sample(NZ22, 1, type = "random")
+#NZ23.samples <- st_sample(NZ23, 1, type = "random")
+NZ24.samples <- st_sample(NZ24, 1, type = "random")
+NZ25.samples <- st_sample(NZ25, 1, type = "random")
+NZ26.samples <- st_sample(NZ26, 1, type = "random")
+NZ27.samples <- st_sample(NZ27, 1, type = "random")
+NZ28.samples <- st_sample(NZ28, 1, type = "random")
+NZ29.samples <- st_sample(NZ29, 1, type = "random")
+
+
+#create a buffer space around the points so they must be Xm or Xkm away from each other
+#https://stackoverflow.com/questions/64391369/how-to-specify-a-minimum-distance-between-points-in-sfst-sample
+#Random points
+
+# N2.samples <- st_sample(N2, size = 20, type="random")
+# N2.samples <- st_sf(N2.samples)
+# 
+# original <- N2.samples # for comparison later :)
+# i <- 1 # iterator start
+# 
+# buffer_size <- 1800 # minimal distance to be enforced (in units of your CRS)
+# 
+# repeat( {
+#   #  create buffer around i-th point
+#   buffer <- st_buffer(N2.samples[i,], buffer_size ) 
+#   
+#   offending <- N2.samples %>%  # start with the intersection of master points.
+#     st_intersects(buffer, sparse = F) # ... and the buffer, as a vector
+#   
+#   # i-th point is not really offending - it is the origin (not to be excluded)
+#   offending[i] <- FALSE
+#   
+#   # if there are any offending points left - re-assign the master points, 
+#   # with the offending ones excluded / this is the main pruning part :)
+#   N2.samples <- N2.samples[!offending,] 
+#   
+#   if ( i >= nrow(N2.samples)) {
+#     # the end was reached; no more points to process
+#     break 
+#   } else {
+#     # rinse & repeat
+#     i <- i + 1 
+#   }
+#   
+# } )
+# 
+# plot(original, pch = 4, col = "grey25") # result of the st_sample()
+# plot(N2.samples, pch = 4, col = "red", add = T) # pruned points
+```
+
+#plot Available and selected sites
+```{r}
+TetiaroaSitemap <- ggplot() + geom_sf(data = Tetiaroa) +
+  #plot extracted PGEM polygons
+  geom_sf(data = ZPR, aes(fill="ZPR")) +
+  #plot extracted available Sites polygons
+  geom_sf(data = NZ20, aes(fill="Available")) +
+  geom_sf(data = NZ21, aes(fill="Available")) +
+  geom_sf(data = NZ22, aes(fill="Available")) +
+  #geom_sf(data = NZ23, aes(fill="Available")) +
+  geom_sf(data = NZ24, aes(fill="Available")) +
+  geom_sf(data = NZ25, aes(fill="Available")) +
+  geom_sf(data = NZ26, aes(fill="Available")) +
+  geom_sf(data = NZ27, aes(fill="Available")) +
+  geom_sf(data = NZ28, aes(fill="Available")) +
+  geom_sf(data = NZ29, aes(fill="Available")) +
+  #plot randomly selected site points
+  geom_sf(data = NZ20.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ21.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ22.samples, aes(color = "Sites")) +
+  #geom_sf(data = NZ23.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ24.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ25.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ26.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ27.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ28.samples, aes(color = "Sites")) +
+  geom_sf(data = NZ29.samples, aes(color = "Sites")) +
+  scale_fill_manual(name='Areas',
+                     breaks=c('ZPR', 'Sites', 'Available'),
+                     values=c('ZPR'='black',
+                              'Available'='green','Sites'='red')) +
+  theme_bw()
+
+pdf("data/Tetiaroa_polygons/Tetiaroa_transect_sites.pdf")
+TetiaroaSitemap
+dev.off()
+```
+#Write out randomly selected site coordinates
+```{r}
+
+st_write(NZ20.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords1.csv", delete_dsn=TRUE)
+st_write(NZ21.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords2.csv", delete_dsn=TRUE)
+st_write(NZ22.samples, layer_options = "GEOMETRY=AS_XY","transect.site.coords3.csv", delete_dsn=TRUE)
+st_write(NZ23.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords4.csv", delete_dsn=TRUE)
+st_write(NZ24.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords5.csv", delete_dsn=TRUE)
+st_write(NZ25.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords6.csv", delete_dsn=TRUE)
+st_write(NZ26.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords7.csv", delete_dsn=TRUE)
+st_write(NZ27.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords8.csv", delete_dsn=TRUE)
+st_write(NZ28.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords9.csv", delete_dsn=TRUE)
+st_write(NZ29.samples, layer_options = "GEOMETRY=AS_XY", "transect.site.coords10.csv", delete_dsn=TRUE)
+
+
+#combine the points into one dataframe
+Sites <- list.files() %>%
+ str_subset("\\.csv$")  %>%
+  lapply(read_csv) %>% 
+  bind_rows
+
+colnames(Sites) <-c("long", "lat")
+#but this puts it in order 1,11,12,13,14... instead of 1-18
+#Sites$site.name <- c(paste0("site"," ", rep(1:nrow(Sites),each = 1)))
+#this puts it in the correct order, but is hard coded, so is only for 18 sites
+Sites$site.name <- c("site1","site10", "site11", "site12","site13", "site14", 
+                     "site15","site16", "site17", "site18", "site2", "site3",
+                     "site4", "site5", "site6","site7", "site8", "site9")
+
+write_csv(Sites,"data/Moorea_polygons/sites/transect.site.coords.csv")
+```
+
