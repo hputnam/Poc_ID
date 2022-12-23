@@ -47,17 +47,17 @@ library(furrr)
 
 ## Import data
 ```{r, warning = FALSE}
-path.p <- "data/PR/1QC" #the location of all your respirometry files 
+path.p <- "data/PR/May_TPC" #the location of all your respirometry files 
 
 # List data files
 file.names <- list.files(path = path.p, pattern = "csv$")  # list all csv file names in the folder
 file.names <- file.names[!grepl("metadata", file.names)]   # omit metadata from files to be read in as data
 
 # Load PI curve sample metadata (i.e., which corals were in which runs)
-sample.info <- read_csv(file = "data/PR/PR_sample_metadata.csv")
+sample.info <- read_csv(file = "data/PR/May_TPC/May_PR_sample_metadata.csv")
 
 # Load PI curve run metadata (i.e., light levels and interval times for each run)
-run.info <- read_csv(file = "data/PR/PR_run_metadata.csv")
+run.info <- read_csv(file = "data/PR/May_TPC/May_PR_run_metadata.csv")
 
 # Join all coral and run metadata
 metadata <- full_join(sample.info, run.info) %>%
@@ -195,7 +195,7 @@ pr <- left_join(pr, blanks) %>%
 
 
 # Import surface area data
-sa <- read_csv(file = "data/surface.area.calc.csv")
+sa <- read_csv(file = "data/May_surface.area.calc.csv")
 
 # Join surface area with rest of data
 pr <- left_join(pr, select(sa, fragment_ID, surface.area.cm2))
@@ -228,13 +228,13 @@ Resp <- na.omit(Resp)
 
 ```{r}
 # Visualize data
-pdf("output/Raw_Resp_TPC.pdf", width=6, height=6)
+pdf("output/May_Raw_Resp_TPC.pdf", width=6, height=6)
 r_plot<-Resp %>%
-    ggplot(., aes(x = Temp.Cat, y = -micromol.cm2.h, colour=Morphology)) +
-    geom_point(aes(fill=Morphology, group=Number), pch = 21, size=2, alpha=0.3) + 
+    ggplot(., aes(x = Temp.Cat, y = -micromol.cm2.h, colour=mtORF)) +
+    geom_point(aes(fill=mtORF, group=Number), pch = 21, size=2, alpha=0.3) + 
     xlab("Temperature") + 
-    scale_fill_manual(name="Morphology", values=c("orange","black","cyan"))+
-    scale_color_manual(name="Morphology", values=c("orange","black","cyan"))+
+    scale_fill_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
+    scale_color_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     ylab(expression(bold(paste("R (µmol ", O[2], " cm"^-2, "min"^-1, ")")))) +
     theme_classic() + 
     theme(axis.title=element_text(face="bold", size=16),
@@ -243,13 +243,13 @@ r_plot<-Resp %>%
       legend.text=element_text(size=12)); r_plot
 dev.off()
 
-pdf("output/Raw_Photo_TPC.pdf", width=6, height=6)
+pdf("output/May_Raw_Photo_TPC.pdf", width=6, height=6)
 p_plot<-Photo %>%
-    ggplot(., aes(x = Temp.Cat, y = micromol.cm2.h, colour=Morphology)) +
-    geom_point(aes(fill=Morphology, group=Number), pch = 21, size=2, alpha=0.3) + 
+    ggplot(., aes(x = Temp.Cat, y = micromol.cm2.h, colour=mtORF)) +
+    geom_point(aes(fill=mtORF, group=Number), pch = 21, size=2, alpha=0.3) + 
     xlab("Temperature") + 
-    scale_fill_manual(name="Morphology", values=c("orange","black","cyan"))+
-    scale_color_manual(name="Morphology", values=c("orange","black","cyan"))+
+    scale_fill_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
+    scale_color_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     ylab(expression(bold(paste("R (µmol ", O[2], " cm"^-2, "min"^-1, ")")))) +
     theme_classic() + 
     theme(axis.title=element_text(face="bold", size=16),
@@ -262,7 +262,7 @@ dev.off()
 PHOTOSYNTHESIS View and remove outliers.   
 ```{r, warning=FALSE, message=FALSE}
 #identify outliers by Temperature and Treatment groups
-Photo$group <- paste0(Photo$Morphology,"_",Photo$Temp.Cat)
+Photo$group <- paste0(Photo$mtORF,"_",Photo$Temp.Cat)
 outlier.plot <- ggbetweenstats(Photo,group, micromol.cm2.h, outlier.tagging = TRUE)
 outlier.plot
 
@@ -271,13 +271,13 @@ q <- c(0.25, 0.75)
 
 # calculate quantile values by Temperature and Treatment groups
 Quants <- Photo %>%
-  group_by(Morphology, Temp.Cat) %>%
+  group_by(mtORF, Temp.Cat) %>%
   summarize(quant25 = quantile(micromol.cm2.h, probs = q[1]),
             quant75 = quantile(micromol.cm2.h, probs = q[2]),
             IQRbyGroup=IQR(micromol.cm2.h))
 
 # add a group name by pasting Temperature and Treatment
-Quants$group <-paste0(Quants$Morphology,"_", Quants$Temp.Cat)
+Quants$group <-paste0(Quants$mtORF,"_", Quants$Temp.Cat)
 
 #Calculate Quantile upper and lower ranges 
 Quants$upper <-  Quants$quant75+1.5*Quants$IQRbyGroup # Upper Range  
@@ -294,11 +294,11 @@ Photodata <- Photodata %>%
 
 # Visualize data following outlier removal
 P_plot<-Photodata %>%
-    ggplot(., aes(x = Temp.Cat, y = micromol.cm2.h, colour=Morphology)) +
-    geom_point(aes(fill=Morphology, group=Number), pch = 21, size=2, alpha=0.3) + 
+    ggplot(., aes(x = Temp.Cat, y = micromol.cm2.h, colour=mtORF)) +
+    geom_point(aes(fill=mtORF, group=Number), pch = 21, size=2, alpha=0.3) + 
     xlab("Temperature") + 
-    scale_fill_manual(name="Morphology", values=c("orange","black","cyan"))+
-    scale_color_manual(name="Morphology", values=c("orange","black","cyan"))+
+    scale_fill_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
+    scale_color_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     ylab(expression(bold(paste("R (µmol ", O[2], " cm"^-2, "min"^-1, ")")))) +
     theme_classic() + 
     theme(legend.position="none",
@@ -307,14 +307,14 @@ P_plot<-Photodata %>%
       legend.title=element_text(face="bold", size=14), 
       legend.text=element_text(size=12)); P_plot
 
-write.csv(Photodata, file="data/Photo_extracted_rates.csv")
+write.csv(Photodata, file="data/May_Photo_extracted_rates.csv")
 
 ```
 
 RESPIRATION View and remove outliers.   
 ```{r, warning=FALSE, message=FALSE}
 #identify outliers by Temperature and Treatment groups
-Resp$group <- paste0(Resp$Morphology,"_",Resp$Temp.Cat)
+Resp$group <- paste0(Resp$mtORF,"_",Resp$Temp.Cat)
 outlier.plot <- ggbetweenstats(Resp,group, micromol.cm2.h, outlier.tagging = TRUE)
 outlier.plot
 
@@ -323,13 +323,13 @@ q <- c(0.25, 0.75)
 
 # calculate quantile values by Temperature and Treatment groups
 Quants <- Resp %>%
-  group_by(Morphology, Temp.Cat) %>%
+  group_by(mtORF, Temp.Cat) %>%
   summarize(quant25 = quantile(micromol.cm2.h, probs = q[1]),
             quant75 = quantile(micromol.cm2.h, probs = q[2]),
             IQRbyGroup=IQR(micromol.cm2.h))
 
 # add a group name by pasting Temperature and Treatment
-Quants$group <-paste0(Quants$Morphology,"_", Quants$Temp.Cat)
+Quants$group <-paste0(Quants$mtORF,"_", Quants$Temp.Cat)
 
 #Calculate Quantile upper and lower ranges 
 Quants$upper <-  Quants$quant75+1.5*Quants$IQRbyGroup # Upper Range  
@@ -348,11 +348,11 @@ Respdata <- Respdata %>%
 
 # Visualize data following outlier removal
 R_plot<-Respdata %>%
-    ggplot(., aes(x = Temp.Cat, y = -micromol.cm2.h, colour=Morphology)) +
-    geom_point(aes(fill=Morphology, group=Number), pch = 21, size=2, alpha=0.3) + 
+    ggplot(., aes(x = Temp.Cat, y = -micromol.cm2.h, colour=mtORF)) +
+    geom_point(aes(fill=mtORF, group=Number), pch = 21, size=2, alpha=0.3) + 
     xlab("Temperature") + 
-    scale_fill_manual(name="Morphology", values=c("orange","black","cyan"))+
-    scale_color_manual(name="Morphology", values=c("orange","black","cyan"))+
+    scale_fill_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
+    scale_color_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     ylab(expression(bold(paste("R (µmol ", O[2], " cm"^-2, "min"^-1, ")")))) +
     theme_classic() + 
     theme(legend.position="none",
@@ -361,6 +361,6 @@ R_plot<-Respdata %>%
       legend.title=element_text(face="bold", size=14), 
       legend.text=element_text(size=12)); R_plot
 
-write.csv(Respdata, file="data/Resp_extracted_rates.csv")
+write.csv(Respdata, file="data/May_Resp_extracted_rates.csv")
 
 ```
