@@ -1,8 +1,8 @@
 ---
-title: "Surface Area Calculations from Wax Dipping for Heatwave timepoint 1"
+title: "Surface Area Calculations from Wax Dipping"
 author: "HM Putnam, AS Huffmyer"
-edited by: "DM Becker-Polinski"
-date: "20220326"
+edited by: "HM Putnam"
+date: "20221225"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -23,7 +23,7 @@ TPC Curve Data
 ```{r}
 
 #load wax data
-wax.data <- read.csv("data/surface_area_data.csv", header=TRUE)
+wax.data <- read.csv("data/May_TPC_surface_area_data.csv", header=TRUE)
 
 wax.data$delta.mass.g <- wax.data$weight2.g-wax.data$weight1.g
 stnds <- subset(wax.data, Sample=="Standard")
@@ -63,15 +63,15 @@ range(stnds$surface.area.cm2)
 #Save the output for use in normilzation for phys assays
 smpls%>%
   select(fragment_ID, surface.area.cm2)%>%
-    write_csv("data/surface.area.calc.csv")
+    write_csv("data/May_TPC_surface.area.calc.csv")
 ```
 
-TPC Baseline Fragment Data
+TPC Baseline Phys Fragment Data
 #use wooden dowel standards to calculate surface area curve 
 ```{r}
 
 #load wax data
-wax.data <- read.csv("data/TPC_surface_area_data.csv", header=TRUE)
+wax.data <- read.csv("data/May_TPC_Phys_surface_area_data.csv", header=TRUE)
 
 wax.data$delta.mass.g <- wax.data$weight2.g-wax.data$weight1.g
 stnds <- subset(wax.data, Sample=="Standard")
@@ -111,6 +111,6 @@ range(stnds$surface.area.cm2)
 #Save the output for use in normilzation for phys assays
 smpls%>%
   select(fragment_ID, surface.area.cm2)%>%
-    write_csv("data/TPC_surface.area.calc.csv")
+    write_csv("data/May_TPC_Phys_surface.area.calc.csv")
 ```
 

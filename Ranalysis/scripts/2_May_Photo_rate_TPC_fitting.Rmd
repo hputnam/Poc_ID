@@ -43,7 +43,7 @@ library('furrr') ## libraries for parallel processing
 
 ## Import data
 ```{r, warning = FALSE}
-Photodata <- read.csv("data/Photo_extracted_rates.csv")
+Photodata <- read.csv("data/May_Photo_extracted_rates.csv")
 ```
 
 TPC fitting 
@@ -433,7 +433,7 @@ estimate.plots <- ggplot(All_params, aes(Treatment, estimate, color=Treatment)) 
 
 estimate.plots
 
-ggsave("output/TPC_estimates_SharpSchool_Photosynthesis.pdf", estimate.plots, dpi=300, w=6, h=2, units="in")
+ggsave("output/May_TPC_estimates_SharpSchool_Photosynthesis.pdf", estimate.plots, dpi=300, w=6, h=2, units="in")
 ``` 
 
 #Plot Curve and Estimate Output
@@ -445,6 +445,6 @@ figure <- ggarrange(TPC.plot , estimate.plots,
                     heights=c(1,0.5))
 figure
 
-ggsave("output/Photosynthesis_TPC_and_estimates.pdf", figure, dpi=300, w=6, h=8, units="in")
+ggsave("output/May_Photosynthesis_TPC_and_estimates.pdf", figure, dpi=300, w=6, h=8, units="in")
 
 ```

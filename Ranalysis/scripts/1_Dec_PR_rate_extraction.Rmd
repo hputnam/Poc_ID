@@ -195,7 +195,7 @@ pr <- left_join(pr, blanks) %>%
 
 
 # Import surface area data
-sa <- read_csv(file = "data/Dec_surface.area.calc.csv")
+sa <- read_csv(file = "data/Dec_TPC_surface.area.calc.csv")
 
 # Join surface area with rest of data
 pr <- left_join(pr, select(sa, fragment_ID, surface.area.cm2))
@@ -236,6 +236,7 @@ r_plot<-Resp %>%
     scale_fill_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     scale_color_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     ylab(expression(bold(paste("Rate (µmol ", O[2], " cm"^-2, "min"^-1, ")")))) +
+    ylim(0,3)+
     theme_classic() + 
     theme(axis.title=element_text(face="bold", size=16),
       axis.text=element_text(size=12, color="black"), 
@@ -251,6 +252,7 @@ p_plot<-Photo %>%
     scale_fill_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     scale_color_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     ylab(expression(bold(paste("Rate (µmol ", O[2], " cm"^-2, "min"^-1, ")")))) +
+    ylim(-0.5,2)+
     theme_classic() + 
     theme(axis.title=element_text(face="bold", size=16),
       axis.text=element_text(size=12, color="black"), 
@@ -286,13 +288,7 @@ Quants$lower <- Quants$quant25-1.5*Quants$IQRbyGroup # Lower Range
 #join outlier cutoffs with rate data
 Photodata <- left_join(Photo, Quants)
 
-#remove outliers from rates
-Photodata <- Photodata %>%
-  filter(micromol.cm2.h < upper) %>%
-  filter(micromol.cm2.h > lower) #%>%
-  #filter(rate < 0.125)
-
-# Visualize data following outlier removal
+# Visualize data before outlier removal
 P_plot<-Photodata %>%
     ggplot(., aes(x = Temp.Cat, y = micromol.cm2.h, colour=mtORF)) +
     geom_point(aes(fill=mtORF, group=Number), pch = 21, size=2, alpha=0.3) + 
@@ -300,12 +296,38 @@ P_plot<-Photodata %>%
     scale_fill_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     scale_color_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     ylab(expression(bold(paste("R (µmol ", O[2], " cm"^-2, "min"^-1, ")")))) +
+    ylim(-0.5,2)+
+    theme_classic() + 
+    theme(#legend.position="none",
+      axis.title=element_text(face="bold", size=16),
+      axis.text=element_text(size=12, color="black"), 
+      legend.title=element_text(face="bold", size=14), 
+      legend.text=element_text(size=12)); P_plot
+
+#remove outliers from rates
+Photodata <- Photodata %>%
+   filter(micromol.cm2.h < upper) %>%
+   filter(micromol.cm2.h > lower)
+
+Photodata$Season <- "Dec"
+
+# Visualize data after outlier removal
+pdf("output/Dec_Outlier_Removed_Photo_TPC.pdf", width=6, height=6)
+P_plot<-Photodata %>%
+    ggplot(., aes(x = Temp.Cat, y = micromol.cm2.h, colour=mtORF)) +
+    geom_point(aes(fill=mtORF, group=Number), pch = 21, size=2, alpha=0.3) + 
+    xlab("Temperature") + 
+    scale_fill_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
+    scale_color_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
+    ylab(expression(bold(paste("R (µmol ", O[2], " cm"^-2, "min"^-1, ")")))) +
+    ylim(-0.5,2)+
     theme_classic() + 
     theme(legend.position="none",
       axis.title=element_text(face="bold", size=16),
       axis.text=element_text(size=12, color="black"), 
       legend.title=element_text(face="bold", size=14), 
       legend.text=element_text(size=12)); P_plot
+dev.off()
 
 write.csv(Photodata, file="data/Dec_Photo_extracted_rates.csv")
 
@@ -339,14 +361,14 @@ Quants$lower <- Quants$quant25-1.5*Quants$IQRbyGroup # Lower Range
 Respdata <- left_join(Resp, Quants)
 
 #remove outliers from rates
-Respdata <- Respdata %>%
-  filter(micromol.cm2.h < upper) %>%
-  filter(micromol.cm2.h > lower) #%>%
-  #filter(rate < 0.125)
+ Respdata <- Respdata %>%
+   filter(micromol.cm2.h < upper) %>%
+   filter(micromol.cm2.h > lower) 
 
-#Respdata$micromol.cm2.h <- -Respdata$micromol.cm2.h
+Respdata$Season <- "Dec"
 
 # Visualize data following outlier removal
+pdf("output/Dec_Outlier_Removed_Resp_TPC.pdf", width=6, height=6)
 R_plot<-Respdata %>%
     ggplot(., aes(x = Temp.Cat, y = -micromol.cm2.h, colour=mtORF)) +
     geom_point(aes(fill=mtORF, group=Number), pch = 21, size=2, alpha=0.3) + 
@@ -354,12 +376,14 @@ R_plot<-Respdata %>%
     scale_fill_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     scale_color_manual(name="mtORF", values=c("orange","black","cyan", "blue", "green"))+
     ylab(expression(bold(paste("R (µmol ", O[2], " cm"^-2, "min"^-1, ")")))) +
+    ylim(0,2)+
     theme_classic() + 
     theme(legend.position="none",
       axis.title=element_text(face="bold", size=16),
       axis.text=element_text(size=12, color="black"), 
       legend.title=element_text(face="bold", size=14), 
       legend.text=element_text(size=12)); R_plot
+dev.off()
 
 write.csv(Respdata, file="data/Dec_Resp_extracted_rates.csv")
 

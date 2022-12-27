@@ -72,6 +72,8 @@ upper_lims <- get_upper_lims(Photodata$temp,Photodata$transformed.rate, model_na
 
 #view values
 start_vals
+start_vals <- start_vals %>% replace(is.na(.), 0)
+start_vals
 low_lims
 upper_lims
 ```
@@ -248,7 +250,7 @@ TPC.plot <- ggplot(data=Photodata, aes(x=temp)) +
 
 TPC.plot 
 
-ggsave("output/TPC_SharpSchool_Photosynthesis.pdf", TPC.plot, dpi=300, w=8, h=8, units="in")
+ggsave("output/Dec_TPC_SharpSchool_Photosynthesis.pdf", TPC.plot, dpi=300, w=8, h=8, units="in")
 ```
 
 # Bootstrap CI for all TPC parameters

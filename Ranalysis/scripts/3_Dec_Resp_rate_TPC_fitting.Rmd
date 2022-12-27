@@ -73,8 +73,6 @@ upper_lims <- get_upper_lims(Respdata$temp,Respdata$transformed.rate, model_name
 
 #view values
 start_vals
-start_vals[3] <- 0.1
-start_vals
 low_lims
 upper_lims
 ```

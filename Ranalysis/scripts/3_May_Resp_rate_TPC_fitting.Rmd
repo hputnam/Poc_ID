@@ -43,7 +43,7 @@ library('furrr') ## libraries for parallel processing
 
 ## Import data
 ```{r, warning = FALSE}
-Respdata <- read.csv("data/Resp_extracted_rates.csv")
+Respdata <- read.csv("data/May_Resp_extracted_rates.csv")
 ```
 
 TPC fitting 
@@ -323,13 +323,13 @@ TPC.plot <- ggplot(data=Respdata, aes(x=temp)) +
 
 TPC.plot 
 
-ggsave("output/TPC_SharpSchool_Respration.pdf", TPC.plot, dpi=300, w=8, h=8, units="in")
+ggsave("output/May_TPC_SharpSchool_Respration.pdf", TPC.plot, dpi=300, w=8, h=8, units="in")
 ```
 
 # Bootstrap CI for all TPC parameters
 ```{r}
 broom::tidy(grandis.fit_nlsLM)
-broom::tidy(meandrina.fit_nlsLM)
+#broom::tidy(meandrina.fit_nlsLM)
 broom::tidy(verrucosa.fit_nlsLM)
 
 ```
@@ -436,7 +436,7 @@ estimate.plots <- ggplot(All_params, aes(Treatment, estimate, color=Treatment)) 
 
 estimate.plots
 
-ggsave("output/TPC_estimates_SharpSchool_Respiration.pdf", estimate.plots, dpi=300, w=6, h=2, units="in")
+ggsave("output/May_TPC_estimates_SharpSchool_Respiration.pdf", estimate.plots, dpi=300, w=6, h=2, units="in")
 ``` 
 
 #Plot Curve and Estimate Output
@@ -448,6 +448,6 @@ figure <- ggarrange(TPC.plot , estimate.plots,
                     heights=c(1,0.5))
 figure
 
-ggsave("output/Respiration_TPC_and_estimates.pdf", figure, dpi=300, w=6, h=8, units="in")
+ggsave("output/May_Respiration_TPC_and_estimates.pdf", figure, dpi=300, w=6, h=8, units="in")
 
 ```
