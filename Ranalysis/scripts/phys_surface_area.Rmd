@@ -1,7 +1,6 @@
 ---
-title: "Surface Area Calculations from Wax Dipping for Heatwave timepoint 1"
-author: "HM Putnam, AS Huffmyer"
-edited by: "DM Becker-Polinski"
+title: "Surface Area Calculations from Wax Dipping"
+author: "HM Putnam"
 date: "20220805"
 output: html_document
 editor_options: 
@@ -22,7 +21,7 @@ library(tidyverse)
 ```{r}
 
 #load wax data
-wax.data <- read.csv("baseline_TPC_physio/data/TPC_surface_area/TPC_surface_area_data.csv", header=TRUE)
+wax.data <- read.csv("data/May_TPC_Phys_surface_area_data.csv", header=TRUE)
 
 wax.data$delta.mass.g <- wax.data$weight2.g-wax.data$weight1.g
 stnds <- subset(wax.data, Sample=="Standard")
@@ -41,7 +40,7 @@ summary(stnd.curve)$r.squared #r-squared = 0.99 20220326
 
 ```
 
-
+May 2022 Data
 ```{r}
 #Calculate surface area using the standard curve
 smpls <- subset(wax.data, Sample=="Coral")
@@ -59,9 +58,38 @@ range(smpls$surface.area.cm2)
 hist(smpls$surface.area.cm2)
 range(stnds$surface.area.cm2)
 
+```
+
+December 2022 Data
+```{r}
+#Calculate surface area using the standard curve
+wax.data.2 <- read.csv("data/Dec_TPC_Phys_surface_area_data.csv", header=TRUE)
+smpls.2 <- subset(wax.data.2, Sample=="Coral")
+smpls.2$delta.mass.g <- smpls.2$weight2.g-smpls.2$weight1.g
+smpls.2$surface.area.cm2 <- stnd.curve$coefficients[2] * smpls.2$delta.mass.g + stnd.curve$coefficients[1]
+
+#select the samples only
+smpls.2 <- smpls.2 %>%
+  select(-Sample, -Diameter)
+
+smpls.2 %>%
+  count(fragment_ID) %>% arrange(n)
+
+#check the range to make sure your samples fall within the range of the standards
+range(smpls.2$surface.area.cm2, na.rm = T)
+hist(smpls.2$surface.area.cm2)
+range(stnds$surface.area.cm2)
+
+```
+
+
 #Save the output for use in normilzation for phys assays
-smpls%>%
-  select(fragment_ID, surface.area.cm2)%>%
-    write_csv("baseline_TPC_physio/output/surface.area.calc.csv")
+```{r}
+
+surface.area.cm2 <- rbind(smpls, smpls.2)
+
+surface.area.cm2 %>%
+  select(fragment_ID, Timepoint, surface.area.cm2)%>%
+    write_csv("output/phys.surface.area.calc.csv")
 ```
 

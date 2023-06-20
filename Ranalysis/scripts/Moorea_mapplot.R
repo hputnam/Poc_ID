@@ -22,7 +22,7 @@ island <- isledata$Site
 NS<-data.frame(lon = -149.80838, lat = -17.47496)
 
 #Map base
-M1<-get_map(NS,zoom = 17, maptype = 'satellite')
+M1<-get_map(NS,zoom = 18, maptype = 'satellite')
 
 #site.cols <- c("#374D7C","#00CCCC", "#FF6633")
 
