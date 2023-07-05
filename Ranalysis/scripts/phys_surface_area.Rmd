@@ -35,12 +35,12 @@ stnds$surface.area.cm2 <- 4*pi*(stnds$rad)^2
 stnd.curve <- lm(surface.area.cm2~delta.mass.g, data=stnds)
 plot(surface.area.cm2~delta.mass.g, data=stnds)
 stnd.curve$coefficients
-summary(stnd.curve)$r.squared #r-squared = 0.99 20220326
+summary(stnd.curve)$r.squared 
 
 
 ```
 
-May 2022 Data
+#May 2022 Data
 ```{r}
 #Calculate surface area using the standard curve
 smpls <- subset(wax.data, Sample=="Coral")
@@ -58,9 +58,11 @@ range(smpls$surface.area.cm2)
 hist(smpls$surface.area.cm2)
 range(stnds$surface.area.cm2)
 
+sa_may <- smpls
+sa_may$Timepoint <- "May"
 ```
 
-December 2022 Data
+#December 2022 Data
 ```{r}
 #Calculate surface area using the standard curve
 wax.data.2 <- read.csv("data/Dec_TPC_Phys_surface_area_data.csv", header=TRUE)
@@ -80,16 +82,21 @@ range(smpls.2$surface.area.cm2, na.rm = T)
 hist(smpls.2$surface.area.cm2)
 range(stnds$surface.area.cm2)
 
+sa_dec <- smpls.2
+sa_dec$Timepoint <- "Dec"
+
 ```
 
 
 #Save the output for use in normilzation for phys assays
 ```{r}
 
-surface.area.cm2 <- rbind(smpls, smpls.2)
+surface.area.cm2 <- rbind(sa_may, sa_dec)
+
+surface.area.cm2$ID <- paste0(surface.area.cm2$fragment_ID, surface.area.cm2$Timepoint)
 
 surface.area.cm2 %>%
-  select(fragment_ID, Timepoint, surface.area.cm2)%>%
-    write_csv("output/phys.surface.area.calc.csv")
+  select(fragment_ID, Timepoint, ID, surface.area.cm2)%>%
+    write_csv("output/TPC_Phys.surface.area.calc.csv")
 ```
 

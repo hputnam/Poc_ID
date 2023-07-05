@@ -1,0 +1,122 @@
+---
+title: "Moorea_Poc_TPC_Sitemap"
+author: "HM Putnam"
+date: "2023-07-05"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r }
+library(ggmap)
+library(sf)
+library(ggsn)
+library(tidyverse)
+library(patchwork)
+```
+
+# Make the Moorea Island Map
+```{r }
+register_google(key = "xxx") ### use your own API
+
+# location
+Moorea<-data.frame(lon = -149.83246425684064, lat = -17.531092816791094)
+
+#Map base
+M1<-get_map(Moorea,zoom = 12, maptype = 'satellite')
+
+bbx <- c(left=-149.802,bottom= -17.480,right=-149.805,top=-17.475)
+x <- c(bbx["left"], bbx["left"], bbx["right"], bbx["right"])
+y <- c(bbx["bottom"], bbx["top"], bbx["top"], bbx["bottom"])
+df <- data.frame(x, y)
+
+Mooreamap<-ggmap(M1)+
+  scalebar(x.min = -149.90, x.max = -149.05,y.min = -17.4, y.max = -18.0,
+           model = 'WGS84', box.fill = c("gray", "white"), st.color = "white",
+           location =  "bottomright", transform = TRUE, dist_unit = "km", dist = 10) +
+  geom_polygon(aes(x=x, y=y), data=df, color="yellow", fill=NA) +
+  #geom_text(data = isledata, aes(x=Long, y=Lat, label=island),vjust =0,size=4, color = 'yellow')+
+  ggtitle('A')+
+  xlab("")+
+  ylab("")
+
+Mooreamap
+
+```
+# Make the North Shore Map
+```{r }
+
+# location
+NorthShore<-data.frame(lon = -149.80690, lat = -17.47708)
+
+#Map base
+M2<-get_map(NorthShore,zoom = 15, maptype = 'satellite')
+
+bbx <- c(left=-149.805,bottom= -17.478,right=-149.809,top=-17.475)
+x <- c(bbx["left"], bbx["left"], bbx["right"], bbx["right"])
+y <- c(bbx["bottom"], bbx["top"], bbx["top"], bbx["bottom"])
+df <- data.frame(x, y)
+
+bbx["left"]
+bbx["right"]
+bbx["top"]
+bbx["bottom"]
+
+NorthShoreMap<-ggmap(M2)+
+  scalebar(x.min = -149.90, x.max = -149.05,y.min = -17.4, y.max = -18.0,
+           model = 'WGS84', box.fill = c("gray", "white"), st.color = "white",
+           location =  "bottomright", transform = TRUE, dist_unit = "km", dist = 10) +
+  geom_polygon(aes(x=x, y=y), data=df, color="yellow", fill=NA) +
+  #geom_text(data = isledata, aes(x=Long, y=Lat, label=island),vjust =0,size=4, color = 'yellow')+
+  ggtitle('B')+
+  xlab("")+
+  ylab("")
+
+NorthShoreMap
+
+```
+
+
+# Make Colony and Transect Map
+```{r}
+sitedata <- read.csv("data/TPC_gps_point_moorea202205.csv")
+str(sitedata)
+#labels <- sitedata$ident
+isledata <- read.csv("data/Island.info.map.csv")
+island <- isledata$Site
+# location
+NS<-data.frame(lon = -149.80690, lat = -17.47708)
+
+colonies <- sitedata %>% filter(point == "Colony")
+colony_labels <- colonies$ident
+transects <- sitedata %>% filter(point == "Transect")
+transect_labels <- transects$grouping
+
+#Map base
+M3<-get_map(NS,zoom = 18, maptype = 'satellite')
+
+MooreaSitemap<-ggmap(M3)+
+  scalebar(x.min = -149.804, x.max = -149.808,y.min = -17.480, y.max = -17.475,
+           model = 'WGS84', box.fill = c("gray", "white"), st.color = "white",
+           location =  "bottomright", transform = TRUE, dist_unit = "km", dist = 1) +
+  geom_point(data = colonies, mapping = aes(x=Longitude, y=Latitude), size=0.5, color="yellow")+
+  geom_text(data = colonies, aes(x=Longitude, y=Latitude, label=colony_labels),vjust = -2,size=1, color="yellow")+
+  geom_line(data = transects, mapping = aes(x=Longitude, y=Latitude,group=grouping), size=0.5, color="black")+
+  ggtitle('C')+
+  xlab("")+
+  ylab("")
+
+MooreaSitemap
+
+```
+
+
+#Generate Combined sitemap
+```{r}
+(Mooreamap+NorthShoreMap+MooreaSitemap) 
+  ggsave("output/Poc_TPC_SiteMap.pdf", plot = last_plot(), width = 12, height = 6)
+
+```

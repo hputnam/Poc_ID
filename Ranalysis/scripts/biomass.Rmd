@@ -17,24 +17,29 @@ if (!require("plotrix")) install.packages("plotrix")
 # load packages
 library(tidyverse)
 library(plotrix)
+library(patchwork)
 
 ```
 
 ```{r }
 #Read in biomass data
-Data <- read.csv("data/biomass_data.csv")
-Data <- na.omit(Data)
+Data.May <- read.csv("data/May_biomass_data.csv")
+Data.May$Timepoint <- "May"
+Data.Dec <- read.csv("data/Dec_biomass_data.csv")
+Data.Dec$Timepoint <- "Dec"
+Data <- rbind(Data.May, Data.Dec)
+Data <- Data %>% filter(partner !="PBS Blank")
 
 # calculated mass per ml
-#different volumes for sym (4ml) and host (5ml)
-sym <- 4
-host <- 5
+#different volumes for sym and host 
+sym <- 5
+host <- 4
 
 #Load tissue homogenate volume
 homog_vol <- read.csv("data/homogenate_vols.csv", header=TRUE)
 
 # Load Surface area data
-sa <- read.csv("data/TPC_surface.area.calc.csv")
+sa <- read.csv("output/TPC_Phys.surface.area.calc.csv")
 
 # Coral sample metadata
 metadata <- read_csv("data/metadata_POC_TPC.csv")
@@ -71,44 +76,36 @@ afdw <- left_join(Data, metadata) %>%
 Output biomass data to .csv.  
 
 ```{r}
-afdw<-afdw %>%
-  group_by(fragment_ID, partner)%>%
-  summarise(AFDW.mg.cm2=mean(AFDW.mg.cm2))%>%
-  left_join(.,metadata)%>% #add metadata back into file
-  select(fragment_ID, partner, Morphology, AFDW.mg.cm2)
-
 dw<-dw %>% 
-  group_by(fragment_ID, partner)%>%
+  group_by(fragment_ID, partner, Timepoint)%>%
   summarise(DW.mg.cm2=mean(DW.mg.cm2))%>%
   left_join(.,metadata)%>% #add metadata back into file
-  select(fragment_ID, partner, Morphology, DW.mg.cm2) 
+  select(fragment_ID, Timepoint, partner, Morphology, DW.mg.cm2) 
+
+afdw<-afdw %>%
+  group_by(fragment_ID, partner, Timepoint)%>%
+  summarise(AFDW.mg.cm2=mean(AFDW.mg.cm2))%>%
+  left_join(.,metadata)%>% #add metadata back into file
+  select(fragment_ID, Timepoint, partner, Morphology, AFDW.mg.cm2)
   
 output<-left_join(afdw,dw)%>%
-  write_csv(path = "output/biomass.csv")
+  write_csv(path = "output/TPC_Phys_biomass.csv")
 ```
 
 ```{r}
 #summarize Dry Biomass mean and sem by site, species, and partner and plot
-
-dw %>% 
-  group_by(Morphology, partner)%>%
-  summarise(mean.value = mean(DW.mg.cm2), se = std.error(DW.mg.cm2)) %>%
-  ggplot(aes(x = Morphology, y = mean.value, group = Morphology, color = partner))+
-  ylab("DW mg cm-2")+
-  geom_point(size = 3)+
-  geom_errorbar(aes(x = Morphology,, ymin = mean.value-se, ymax = mean.value+se), width = 0.5)
-
 # Plot all data points with mean ± se
-dw %>%
-  ggplot(aes(x = Morphology, y = DW.mg.cm2, color = Morphology)) +
-  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
-  #coord_cartesian(ylim = c(0, 1.8))+
+dw_plot <- dw %>%
+  ggplot(aes(x = Morphology, y = DW.mg.cm2, color = Morphology, shape=Timepoint, group = Timepoint)) +
   labs(x = "", y = expression("Dry Biomass mg"~cm^{-2})) +
-  geom_jitter(width = 0.1) +                                            # Plot all points
+  geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+               geom = "errorbar", width = 0.2) +
+  scale_shape_manual(values=c(Dec=16,May=17))+
+  stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
   theme_bw(base_size = 12)+
+  theme(legend.position='none')+
   facet_wrap("partner")
 
 
@@ -116,28 +113,23 @@ dw %>%
 
 ```{r}
 
-afdw %>% 
-  group_by(Morphology, partner)%>%
-  summarise(mean.value = mean(AFDW.mg.cm2), se = std.error(AFDW.mg.cm2)) %>%
-  ggplot(aes(x = Morphology, y = mean.value, group = Morphology, color = partner))+
-  ylab("AFDW mg cm-2")+
-  geom_point(size = 3)+
-  geom_errorbar(aes(x = Morphology,, ymin = mean.value-se, ymax = mean.value+se), width = 0.5)
-
 # Plot all data points with mean ± se
-afdw %>%
-  ggplot(aes(x = Morphology, y = AFDW.mg.cm2, color = Morphology)) +
-  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
-  #coord_cartesian(ylim = c(0, 5))+
+afdw_plot <- afdw %>%
+  ggplot(aes(x = Morphology, y = AFDW.mg.cm2, color = Morphology, shape=Timepoint, group = Timepoint)) +
   labs(x = "", y = expression("AFDW mg"~cm^{-2})) +
-  geom_jitter(width = 0.1) +                                            # Plot all points
+  geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
+               geom = "errorbar", width = 0.2) +
+  scale_shape_manual(values=c(Dec=16,May=17))+
+  stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
+  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
   theme_bw(base_size = 12)+
   facet_wrap("partner")
 
 ```
 
 
- 
+```{r}
+ (dw_plot+afdw_plot) 
+  ggsave("output/Poc_TPC_Biomass.pdf", plot = last_plot(), width = 12, height = 6)
+```

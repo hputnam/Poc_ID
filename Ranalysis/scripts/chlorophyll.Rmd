@@ -16,14 +16,17 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ## install packages if you dont already have them
 if (!require("tidyverse")) install.packages("tidyverse")
 if (!require("plotrix")) install.packages("plotrix")
+if (!require("Hmisc")) install.packages("Hmisc")
 
 # load packages
 library(plotrix)
 library(tidyverse)
+library(Hmisc)
 
 ```
 
-# Import data
+# May
+### Import data
 ```{r}
 # Define function to read in chl data
 read_chl <- function(file) {
@@ -36,9 +39,9 @@ read_chl <- function(file) {
 }
 
 # List chlorophyll data files
-chl_path <- "data/"                                        # Path to chlorophyll data directory
+chl_path <- "/Users/hputnam/MyProjects/Poc_ID/Ranalysis/data/chl/May/"                                        # Path to chlorophyll data directory
 all_chl_files <- list.files(path = chl_path, pattern = "_Chl_data.csv")          # List all files in directory
-chl_platemaps <- list.files(path = chl_path, pattern = "Chl_platemap")       # List platemap files
+chl_platemaps <- list.files(path = chl_path, pattern = "Chl_data_platemap")       # List platemap files
 chl_data_files <- setdiff(all_chl_files, chl_platemaps)                  # List absorbance data files
 
 
@@ -50,10 +53,10 @@ df <- tibble(file = chl_data_files) %>%
 # Merge platemap and data for each plate
 df <- df %>%
   mutate(merged = map2(platemap, chl_data, ~ right_join(.x, .y)))
-```
+
 
 # Calculate chlorophyll concentrations
-```{r}
+
 # average all technical replicates for each plate/sample/wavelength, including all acetone blanks together (per plate)
 df <- df %>%
   unnest(merged) %>%
@@ -74,10 +77,66 @@ df <- df %>%
 # units µg/ml
 #path length adjustment = 0.6 
 
-df <- df %>%
+df.may <- df %>%
   mutate(chla.ug.ml = (11.43 * adj663)/0.6 - (0.64 * adj630)/0.6,
         chlc2.ug.ml = (27.09 * adj630)/0.6 - (3.63 * adj663)/0.6)
 
+df.may$Timepoint <- "May"
+
+```
+
+# Dec
+### Import data
+```{r}
+
+# List chlorophyll data files
+chl_path <- "/Users/hputnam/MyProjects/Poc_ID/Ranalysis/data/chl/Dec/"                                        # Path to chlorophyll data directory
+all_chl_files <- list.files(path = chl_path, pattern = "_Chl_data.csv")          # List all files in directory
+chl_platemaps <- list.files(path = chl_path, pattern = "Chl_data_platemap")       # List platemap files
+chl_data_files <- setdiff(all_chl_files, chl_platemaps)                  # List absorbance data files
+
+
+# Read in all files into tibble
+df <- tibble(file = chl_data_files) %>%
+  mutate(platemap = map(file, ~ read_csv(paste0(chl_path, tools::file_path_sans_ext(.), "_platemap.csv"))),
+         chl_data = map(file, ~ read_chl(paste0(chl_path, .))))
+
+# Merge platemap and data for each plate
+df <- df %>%
+  mutate(merged = map2(platemap, chl_data, ~ right_join(.x, .y)))
+
+
+# Calculate chlorophyll concentrations
+
+# average all technical replicates for each plate/sample/wavelength, including all acetone blanks together (per plate)
+df <- df %>%
+  unnest(merged) %>%
+  filter(!is.na(fragment_ID)) %>%                         # remove empty wells (fragment_ID is NA)
+  group_by(file, fragment_ID, wavelength) %>%
+  summarise(n = n(), mean_abs = mean(absorbance)) %>%
+  spread(wavelength, mean_abs)
+
+# get the acetone blank 750 absorbace for each file (i.e., plate), and subtract from 630 and 663 values for each sample
+df <- df %>%
+  group_by(file) %>%
+  mutate(blank750 = `750`[fragment_ID == "BK"]) %>%
+  ungroup() %>%
+  mutate(adj630 = `630` - blank750,
+         adj663 = `663` - blank750)
+
+# calculate chla and chlc2 values based on equations from Jeffrey and Humphrey 1975
+# units µg/ml
+#path length adjustment = 0.6 
+
+df.dec <- df %>%
+  mutate(chla.ug.ml = (11.43 * adj663)/0.6 - (0.64 * adj630)/0.6,
+        chlc2.ug.ml = (27.09 * adj630)/0.6 - (3.63 * adj663)/0.6)
+
+df.dec$Timepoint <- "Dec"
+
+chl <- rbind(df.may, df.dec) 
+
+chl$ID <- paste0(chl$fragment_ID, chl$Timepoint)
 ```
 
 
@@ -85,44 +144,48 @@ df <- df %>%
 ```{r}
 # Load homogenate volume
 homog.vol <- read_csv("data/homogenate_vols.csv") %>%
-  select(fragment_ID, homog_vol_ml)
+  select(fragment_ID, homog_vol_ml, Timepoint)
 
-chl <- full_join(df, homog.vol)
+homog.vol$ID <- paste0(homog.vol$fragment_ID, homog.vol$Timepoint)
+
+chl.data <- left_join(chl, homog.vol, by="ID")
+
+# remove blanks and NAs
+chl.data <- filter(chl.data, !ID %in% c("NA", "BK"))
 
 # Load Surface area data
-sa <- read.csv("data/TPC_surface.area.calc.csv")
+sa <- read.csv("output/TPC_Phys.surface.area.calc.csv")
 
 # Coral sample metadata
 metadata <- read_csv("data/metadata_POC_TPC.csv")
 
 # Join homogenate volumes and surface area with sample metadata
-chl <- full_join(metadata, chl) %>%
-  full_join(sa) %>%
-  full_join(chl)
+chl.data <- left_join(metadata, chl.data, by="ID")
+chl.data <- left_join(chl.data, sa, by="ID")
 
 # Multiply chlorophyll by the homogenate volume and divide by surface area
-chl <- chl %>%
+chl.data <- chl.data %>%
   mutate(chla.ug.cm2 = chla.ug.ml * homog_vol_ml / surface.area.cm2,
          chlc2.ug.cm2 = chlc2.ug.ml * homog_vol_ml / surface.area.cm2)
 
 # remove blanks and NAs
-chl <- filter(chl, !fragment_ID %in% c("NA", "BK"))
+chl.data <- filter(chl.data, !ID %in% c("NA", "BK"))
 
 # write chlorophyll data to file
-chl %>%
-  select(fragment_ID, Morphology,chla.ug.cm2, chlc2.ug.cm2) %>%
+chl.data %>%
+  select(ID, Timepoint.x, Morphology,chla.ug.cm2, chlc2.ug.cm2) %>%
   filter(!is.na(chla.ug.cm2))%>%
   filter(!is.na(chlc2.ug.cm2))%>%
-  write_csv(path = "output/TPC_chlorophyll.csv")
+  write_csv(path = "output/TPC_Phys_chlorophyll.csv")
 ```
 
 # Plot results by species and site
 ```{r, eval = TRUE}
 
 # Plot chlorophyll a
-chl %>%
-  ggplot(aes(x = Morphology, y = chla.ug.cm2, color = Morphology)) +
-  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+chl.data %>%
+  ggplot(aes(x = Morphology, y = chla.ug.cm2, color = Timepoint.x, shape=Timepoint.x)) +
+  scale_color_manual(name="Timepoint.x", values=c("red", "cyan"))+
   coord_cartesian(ylim = c(0, 6.5))+
   labs(x = "", y = expression("Chl-a mg"~cm^{-2})) +
   geom_jitter(width = 0.1) +                                            # Plot all points
@@ -132,11 +195,11 @@ chl %>%
   theme_bw(base_size = 12)
 
 # Plot chlorophyll c2
-chl %>%
-  ggplot(aes(x = Morphology, y = chlc2.ug.cm2, color = Morphology)) +
-  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+chl.data %>%
+  ggplot(aes(x = Morphology, y = chlc2.ug.cm2, color = Timepoint.x, shape=Timepoint.x)) +
+  scale_color_manual(name="Timepoint.x", values=c("red", "cyan"))+
   coord_cartesian(ylim = c(0, 6.5))+
-  labs(x = "", y = expression("Chl-c2 mg"~cm^{-2})) +
+  labs(x = "", y = expression("Chl-a mg"~cm^{-2})) +
   geom_jitter(width = 0.1) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", color = "black", width = 0.5) +
