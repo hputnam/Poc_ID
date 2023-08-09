@@ -2,7 +2,7 @@
 title: "March 2022 host and holobiont protein analysis"
 author: "HM Putnam, AS Huffmyer"
 edited by: "DM Becker-Polinski"
-date: "20220808"
+date: "20230808"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -11,37 +11,31 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
-## install packages if you dont already have them
-if (!require("tidyverse")) install.packages("tidyverse")
-if (!require("broom")) install.packages("broom")
-
 # load packages
 library(tidyverse)
 library(broom)
+library(plotrix)
+library(patchwork)
+library(performance)
+library(ggpubr)
+library(rstatix)
+library(see)
+library(ggpmisc)
+
 ```
 
-# Import data for host protein 
+# Calculate each plate with respect to its standard curve
+# 20220808host 20220810holo 20230614host, 20230614holo
+
+# 20220808 Host
+# Import data 
 ```{r}
-# List protein data files 
-prot_path = "data/"  # Path to prot data directory
-all_prot_files <- list.files(path = prot_path, pattern = "*_host")          # List all files in directory
-prot_platemaps <- list.files(path = prot_path, pattern = "_host_platemap_prot")       # List platemap files
-prot_data_files <- setdiff(all_prot_files, prot_platemaps)                 # List data files
-
-# Read in all files into tibble
-df_host <- tibble(file = prot_data_files) %>%
-  separate(file, into = c("trip", "date", "plate"), remove = FALSE) %>%
-  unite(plate, trip, date, plate) %>%
-  dplyr::mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_platemap_prot.csv"))),
-         prot_data = map(file, ~read_csv(paste0(prot_path, .)) %>% rename(well = Well)))
-
-# Merge platemap and data for each plate
-df_host <- df_host %>%
-  mutate(merged = map2(platemap, prot_data, ~ right_join(.x, .y)))
-```
+# Load data
+prot_data <- read.csv("data/protein/20220808_May_BCA_host_data_prot.csv")         # List all files in directory
+platemap <- read.csv("data/protein/20220808_May_BCA_host_platemap_prot.csv")       # List platemap files
+df_host <- right_join(platemap, prot_data, by="Well") # Merge platemap and data for each plate
 
 # Plot standard curve
-```{r}
 # Create standard curve following kit instructions
 standards_host <- tribble(
   ~std, ~BSA_ug.mL,
@@ -57,128 +51,59 @@ standards_host <- tribble(
 )
 
 std_curve_host <- df_host %>%
-  unnest(merged) %>%
-  filter(grepl("Standard", fragment_ID)) %>%
-  select(plate, well, fragment_ID, abs562 = `562:562`) %>%
-  rename(std = fragment_ID) %>%
-  mutate(std = str_sub(std, 9, 9)) %>%
-  #group_by(std) %>%
-  #summarise(abs562 = mean(abs562)) %>%                       # calculate mean of standard duplicates
-  #mutate(abs562.adj = abs562 - abs562[std == "I"]) %>%       # subtract blank absorbace value from all
-  left_join(standards_host)
+  filter(grepl("Standard", fragment_ID)) %>% #filter standards
+  select(Well, fragment_ID, abs562 = "abs562") %>% #select columns
+  rename(std = fragment_ID) %>% #name id
+  mutate(std = str_sub(std, 9, 9)) %>% #remove the word standard
+  mutate(abs562.adj = abs562 - abs562[std == "I"]) %>%       # subtract blank absorbance value from all
+  left_join(standards_host) #join with standard concentrations above
 
+#Calculate the calibration curve
+mod_host <- lm(BSA_ug.mL ~ abs562, data = std_curve_host) #fit linear model
+fitted_host <- mod_host %>% broom::augment() #extract the model fitted data
+summary(mod_host) #report the model fit
 
-## Fit nonlinear model for standard curve
-mod_host <- nls(formula = BSA_ug.mL ~ z + a * exp(b * abs562), start = list(z = 0, a = 1, b = 1), data = std_curve_host)
-fitted_host <- mod_host %>% broom::augment()
-
-# Plot standard curve
+# Plot standard curve with line fit
 std_curve_plot_host <- std_curve_host %>%
-  ggplot(aes(x = abs562, y = BSA_ug.mL)) +
-  geom_point(color = "red", size = 3) 
+  ggplot(aes(x = abs562, y = BSA_ug.mL)) + #plot x y
+  geom_point(color = "red", size = 3)+ # color standards
+  geom_line(data = fitted_host, aes(x = abs562, y = .fitted)) + #add line fit
+  stat_poly_eq(use_label(c("eq", "R2")),rr.digits = 4) + #show line fit equation and R2
+  labs(title = "BSA Protein Standard curve") #label plot
+std_curve_plot_host #view plot
 
-std_curve_plot_host + 
-  geom_line(data = fitted_host, aes(x = abs562, y = .fitted)) +
-  labs(title = "Standard curve")
-```
-
-# Calculate protein concentrations
-```{r}
 # Calculate protein concentration for all samples using standard curve
 prot_host <- df_host %>%
-  unnest(merged) %>%
-  filter(!grepl("Standard", fragment_ID)) %>%                     # Get just samples (not standards)
-  select(plate, well, fragment_ID, abs562 = `562:562`) %>%        # Select only needed columns
-  filter(!is.na(fragment_ID)) %>%                                 # Filter out empty wells
-  filter(fragment_ID != "BK") %>%                                 # Filter out blank wells
+  filter(!grepl("Standard", fragment_ID, Timepoint)) %>%  # Get just samples (not standards)
+  select(Well, fragment_ID, Timepoint, abs562) %>%        # Select only needed columns
+  filter(!is.na(fragment_ID)) %>%                         # Filter out empty wells
+  filter(fragment_ID != "BK") %>%                         # Filter out blank wells
   mutate(prot_ug.mL = map_dbl(abs562, ~ predict(mod_host, newdata = data.frame(abs562 = .))))    # Use standard curve to convert absorbance to protein
 
+prot_host <- na.omit(prot_host) #remove rows with NA
+prot_host <- prot_host %>% filter(prot_ug.mL > 0) #remove any rows with impossible values
+
+#plot samples projected onto standards to check that they fall in range of the standards
 std_curve_plot_host + 
-  geom_point(data = prot_host, aes(x = abs562, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
-  labs(title = "All samples projected on standard curve")
+  geom_point(data = prot_host, aes(x = abs562, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) + #add points
+  labs(title = "All samples projected on standard curve") #label plot
+
+#start dataframe to add all values to after plate specific calculations
+tpc.host.protein <- prot_host
+
 ```
 
-# Normalize to surface area
+# 20220614 Host
+# Import data 
 ```{r}
-# Surface area data
-sa <- read.csv("data/TPC_surface.area.calc.csv")
-
-# Tissue homogenate volume data
-homog_vols <- read_csv("data/homogenate_vols.csv") %>% select(1:3)
-
-# Coral sample metadata
-metadata <- read_csv("data/metadata_POC_TPC.csv") %>% select(1:4)
-
-# Join homogenate volumes and surface area with sample metadata
-metadata <- full_join(metadata, homog_vols) %>%
-  full_join(sa)
-
-# Join prot data with metadata
-prot_host <- left_join(prot_host, metadata) %>%
-  mutate(prot_ug = prot_ug.mL * homog_vol_ml,
-         prot_ug.cm2 = prot_ug / surface.area.cm2,
-         prot_mg.cm2 = prot_ug.cm2 / 1000)
-prot_host <- prot_host %>%
-  filter(species=="Pocillopora") 
-
-avg_prot_host <- prot_host %>%
-  group_by(fragment_ID,Morphology) %>%
-  summarize(prot_mg.cm2 = mean(prot_mg.cm2))
-
-```
-
-# Plot results by species and site
-```{r}
-# Plot all data points with mean ± se
-avg_prot_host %>%
-  ggplot(aes(x = Morphology, y = prot_mg.cm2, color = Morphology)) +
-  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
-  coord_cartesian(ylim = c(0, 1.8))+
-  labs(x = "", y = expression("Host Soluble Protein mg"~cm^{-2})) +
-  geom_jitter(width = 0.1) +                                            # Plot all points
-  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun = mean, geom = "point", color = "black")+           # Plot mean
-  theme_bw(base_size = 12)
-```
-
-# Write data to output file
-```{r}
-# Write protein data to output file
-prot_host %>%
-  filter(!is.na(species)) %>%
-  group_by(fragment_ID) %>%
-  summarise(prot_ug = mean(prot_ug, na.rm = T),
-            prot_ug.cm2 = mean(prot_ug.cm2, na.rm = T)) %>%
-  select(fragment_ID, prot_ug, prot_ug.cm2) %>%
-  write_csv(., path = "output/host_protein.csv")
-```
-
-
-# Import data for holobiont protein
-```{r}
-# List protein data files 
-prot_path = "data/"                                              # Path to prot data directory
-all_prot_files <- list.files(path = prot_path, pattern = "_holobiont")          # List all files in directory
-prot_platemaps <- list.files(path = prot_path, pattern = "_holobiont_platemap_prot")       # List platemap files
-prot_data_files <- setdiff(all_prot_files, prot_platemaps)                 # List data files
-
-# Read in all files into tibble
-df_holobiont <- tibble(file = prot_data_files) %>%
-  separate(file, into = c("trip", "date", "plate"), remove = FALSE) %>%
-  unite(plate, trip, date, plate) %>%
-  dplyr::mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_platemap_prot.csv"))),
-         prot_data = map(file, ~read_csv(paste0(prot_path, .)) %>% rename(well = Well)))
-
-# Merge platemap and data for each plate
-df_holobiont <- df_holobiont %>%
-  mutate(merged = map2(platemap, prot_data, ~ right_join(.x, .y)))
-```
+# Load data
+prot_data <- read.csv("data/protein/20230614_Dec_BCA_host_data_prot.csv")         # List all files in directory
+platemap <- read.csv("data/protein/20230614_Dec_BCA_host_platemap_prot.csv")       # List platemap files
+df_host <- right_join(platemap, prot_data, by="Well") # Merge platemap and data for each plate
 
 # Plot standard curve
-```{r}
 # Create standard curve following kit instructions
-standards_holobiont <- tribble(
+standards_host <- tribble(
   ~std, ~BSA_ug.mL,
   "A",        2000,
   "B",        1500,
@@ -191,89 +116,469 @@ standards_holobiont <- tribble(
   "I",           0
 )
 
-std_curve_holobiont <- df_holobiont %>%
-  unnest(merged) %>%
-  filter(grepl("Standard", fragment_ID)) %>%
-  select(plate, well, fragment_ID, abs562 = `562:562`) %>%
-  rename(std = fragment_ID) %>%
-  mutate(std = str_sub(std, 9, 9)) %>%
-  #group_by(std) %>%
-  #summarise(abs562 = mean(abs562)) %>%                       # calculate mean of standard duplicates
-  #mutate(abs562.adj = abs562 - abs562[std == "I"]) %>%       # subtract blank absorbace value from all
-  left_join(standards_holobiont)
+std_curve_host <- df_host %>%
+  filter(grepl("Standard", fragment_ID)) %>% #filter standards
+  select(Well, fragment_ID, abs562 = "abs562") %>% #select columns
+  rename(std = fragment_ID) %>% #name id
+  mutate(std = str_sub(std, 9, 9)) %>% #remove the word standard
+  mutate(abs562.adj = abs562 - abs562[std == "I"]) %>%       # subtract blank absorbance value from all
+  left_join(standards_host) #join with standard concentrations above
 
-## Fit nonlinear model for standard curve
-mod_holobiont <- nls(formula = BSA_ug.mL ~ z + a * exp(b * abs562), start = list(z = 0, a = 1, b = 1), data = std_curve_holobiont)
-fitted_holobiont <- mod_holobiont %>% broom::augment()
+#Calculate the calibration curve
+mod_host <- lm(BSA_ug.mL ~ abs562, data = std_curve_host) #fit linear model
+fitted_host <- mod_host %>% broom::augment() #extract the model fitted data
+summary(mod_host) #report the model fit
 
-# Plot standard curve
-std_curve_plot_holobiont <- std_curve_holobiont %>%
-  ggplot(aes(x = abs562, y = BSA_ug.mL)) +
-  geom_point(color = "red", size = 3) 
+# Plot standard curve with line fit
+std_curve_plot_host <- std_curve_host %>%
+  ggplot(aes(x = abs562, y = BSA_ug.mL)) + #plot x y
+  geom_point(color = "red", size = 3)+ # color standards
+  geom_line(data = fitted_host, aes(x = abs562, y = .fitted)) + #add line fit
+  stat_poly_eq(use_label(c("eq", "R2")),rr.digits = 4) + #show line fit equation and R2
+  labs(title = "BSA Protein Standard curve") #label plot
+std_curve_plot_host #view plot
 
-std_curve_plot_holobiont + 
-  geom_line(data = fitted_holobiont, aes(x = abs562, y = .fitted)) +
-  labs(title = "Standard curve")
-```
-
-# Calculate protein concentrations
-```{r}
 # Calculate protein concentration for all samples using standard curve
-prot_holobiont <- df_holobiont %>%
-  unnest(merged) %>%
-  filter(!grepl("Standard", fragment_ID)) %>%                     # Get just samples (not standards)
-  select(plate, well, fragment_ID, abs562 = `562:562`) %>%        # Select only needed columns
-  filter(!is.na(fragment_ID)) %>%                                 # Filter out empty wells
-  filter(fragment_ID != "BK") %>%                                 # Filter out blank wells
-  mutate(prot_ug.mL = map_dbl(abs562, ~ predict(mod_holobiont, newdata = data.frame(abs562 = .))))    # Use standard curve to convert absorbance to protein
+prot_host <- df_host %>%
+  filter(!grepl("Standard", fragment_ID, Timepoint)) %>%  # Get just samples (not standards)
+  select(Well, fragment_ID, Timepoint, abs562) %>%        # Select only needed columns
+  filter(!is.na(fragment_ID)) %>%                         # Filter out empty wells
+  filter(fragment_ID != "BK") %>%                         # Filter out blank wells
+  mutate(prot_ug.mL = map_dbl(abs562, ~ predict(mod_host, newdata = data.frame(abs562 = .))))    # Use standard curve to convert absorbance to protein
 
-std_curve_plot_holobiont + 
-  geom_point(data = prot_holobiont, aes(x = abs562, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
-  labs(title = "All samples projected on standard curve")
+prot_host <- na.omit(prot_host) #remove rows with NA
+prot_host <- prot_host %>% filter(prot_ug.mL > 0) #remove any rows with impossible values
+
+#plot samples projected onto standards to check that they fall in range of the standards
+std_curve_plot_host + 
+  geom_point(data = prot_host, aes(x = abs562, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) + #add points
+  labs(title = "All samples projected on standard curve") #label plot
+
+#start dataframe to add all values to after plate specific calculations
+tpc.host.protein <- rbind(tpc.host.protein, prot_host)
+
 ```
 
-# Normalize to surface area
+
+# Normalize Host protein to surface area
 ```{r}
 
-# Join prot data with metadata
-prot_holobiont <- left_join(prot_holobiont, metadata) %>%
+tpc.host.protein$ID <- paste0(tpc.host.protein$fragment_ID, tpc.host.protein$Timepoint)
+
+# Load Surface area data
+May_sa <- read.csv("data/May_TPC_Phys_surface.area.calc.csv")
+
+May_homog.vol <- read_csv("data/May_TPC_Phys_homogenate_vols.csv") 
+
+# Load Surface area data
+Dec_sa <- read.csv("data/Dec_TPC_Phys_surface.area.calc.csv")
+
+Dec_homog.vol <- read_csv("data/Dec_TPC_Phys_homogenate_vols.csv")
+
+sa <- rbind(May_sa,Dec_sa) %>%
+  select(fragment_ID, Timepoint, surface.area.cm2) 
+sa$ID <- paste0(sa$fragment_ID, sa$Timepoint)
+
+# Load homogenate volumes data
+homog.vol <- rbind(May_homog.vol, Dec_homog.vol) %>%
+  select(fragment_ID, Timepoint, homog_vol_ml) 
+homog.vol$ID <- paste0(homog.vol$fragment_ID, homog.vol$Timepoint)
+
+# Load Coral sample metadata
+info <- read_csv("data/metadata_POC_TPC.csv")
+info$ID <- paste0(info$fragment_ID, info$Timepoint)
+
+# Join homogenate volumes with sample metadata
+metadata <- dplyr::inner_join(
+   info,
+   dplyr::select(homog.vol, -any_of(names(info)), ID),
+   by = "ID"
+)
+
+#combine surface area with sample metadata
+metadata <- dplyr::inner_join(
+   metadata,
+   dplyr::select(sa, -any_of(names(metadata)), ID),
+   by = "ID"
+)
+
+# Join prot data with sample metadata
+prot_host <- dplyr::inner_join(
+   tpc.host.protein,
+   dplyr::select(metadata, -any_of(names(tpc.host.protein)), ID),
+   by = "ID"
+)
+
+
+# Standardize protein to volumne and surface area and mg/cm2
+prot_host <- prot_host %>%
   mutate(prot_ug = prot_ug.mL * homog_vol_ml,
          prot_ug.cm2 = prot_ug / surface.area.cm2,
          prot_mg.cm2 = prot_ug.cm2 / 1000)
 
-prot_holobiont <- prot_holobiont %>%
-  filter(species=="Pocillopora") 
 
-avg_prot_holobiont  <- prot_holobiont  %>%
-  group_by(fragment_ID, Morphology) %>%
-  summarize(prot_mg.cm2 = mean(prot_mg.cm2))
+boxplot(prot_mg.cm2~Timepoint, data=prot_host)
 ```
 
-# Plot results by species and site
+#filter to Hap1a and Hap3b only and the same colonies for both times
 ```{r}
+#filter by species
+prot_host.sub<-prot_host %>% 
+  filter(mtORF =="Haplotype_1a" | mtORF =="P verrucosa Haplotype 3b") 
+
+#filter by colonies available in May and Dec
+prot_host.sub.unique <- prot_host.sub %>% 
+  group_by(fragment_ID) %>% 
+  filter(n_distinct(Timepoint) == 2)
+
+#calculate the mean of the 2 replicate  wells
+prot_host.sub.unique.means <- prot_host.sub.unique %>% 
+  group_by(fragment_ID, Timepoint, mtORF) %>% 
+  summarise(prot_mg.cm2 = mean(prot_mg.cm2, na.rm = T))
+
+```
+
+#Statistical testing Host
+```{r}
+
+## Outlier Detection
+
+# 2 way ANOVA
+## Untransformed
+model  <- lm(prot_mg.cm2 ~ mtORF*Timepoint, data = prot_host.sub.unique.means)
+check_model(model)
+check_outliers(model)
+check_normality(model)
+
+## log10 Transformed
+model.1  <- lm(log10(prot_mg.cm2) ~ mtORF*Timepoint, data = prot_host.sub.unique.means)
+check_model(model.1)
+check_outliers(model.1)
+check_normality(model.1)
+
+model.Prot.Host  <- lm(prot_mg.cm2 ~ mtORF*Timepoint, data = prot_host.sub.unique.means)
+anova(model.Prot.Host)
+stat.labels1 <- round(anova(model.Prot.Host), 5)
+
+```
+
+```{r}
+#summarize  mean and sem by site, species, and partner and plot
+
+level_order <- c('May', 'Dec') 
+
 # Plot all data points with mean ± se
-prot_holobiont %>%
-  ggplot(aes(x = Morphology, y = prot_mg.cm2, color = Morphology)) +
-  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
-  coord_cartesian(ylim = c(0, 1.8))+
-  labs(x = "", y = expression("Holobiont Soluble Protein mg"~cm^{-2})) +
-  geom_jitter(width = 0.1) +                                            # Plot all points
+prot_plot_Host <- prot_host.sub.unique.means %>%
+  ggplot(aes(x = factor(Timepoint, level = level_order), y = prot_mg.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  labs(x = "", y = expression("Host Soluble Protein mg"~cm^{-2})) +
+  geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
-  theme_bw(base_size = 12)
+               geom = "errorbar", width = 0.2) +
+  stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
+  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  geom_text(x=1, y=1.30, label=paste("Species=",stat.labels1$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=1.25, label=paste("Time=",stat.labels1$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=1.20, label=paste("Species x Time=",stat.labels1$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
+  theme(axis.text.y = element_text(size=14, face="bold", colour = "black"),axis.text.x = element_text(size=14, face="bold", colour = "black")) +
+  theme_classic(base_size = 14)+
+  theme(legend.position='none')
+prot_plot_Host 
+
 ```
 
-# Write data to output file
+
+# 20220808 Holo
+# Import data 
 ```{r}
-# Write protein data to output file
-prot_holobiont %>%
-  filter(!is.na(species)) %>%
-  group_by(fragment_ID) %>%
-  summarise(prot_ug = mean(prot_ug, na.rm = T),
-            prot_ug.cm2 = mean(prot_ug.cm2, na.rm = T)) %>%
-  select(fragment_ID, prot_ug, prot_ug.cm2) %>%
-  mutate(timepoint="MARCH")%>%
-  write_csv(., path = "output/holobiont_protein.csv")
+# Load data
+prot_data <- read.csv("data/protein/20220810_May_BCA_holobiont_data_prot.csv")         # List all files in directory
+platemap <- read.csv("data/protein/20220810_May_BCA_holobiont_platemap_prot.csv")       # List platemap files
+df_holo <- right_join(platemap, prot_data, by="Well") # Merge platemap and data for each plate
+
+# Plot standard curve
+# Create standard curve following kit instructions
+standards_holo <- tribble(
+  ~std, ~BSA_ug.mL,
+  "A",        2000,
+  "B",        1500,
+  "C",        1000,
+  "D",         750,
+  "E",         500,
+  "F",         250,
+  "G",         125,
+  "H",          25,
+  "I",           0
+)
+
+std_curve_holo <- df_holo %>%
+  filter(grepl("Standard", fragment_ID)) %>% #filter standards
+  select(Well, fragment_ID, abs562 = "abs562") %>% #select columns
+  rename(std = fragment_ID) %>% #name id
+  mutate(std = str_sub(std, 9, 9)) %>% #remove the word standard
+  mutate(abs562.adj = abs562 - abs562[std == "I"]) %>%       # subtract blank absorbance value from all
+  left_join(standards_holo) #join with standard concentrations above
+
+#Calculate the calibration curve
+mod_holo <- lm(BSA_ug.mL ~ abs562, data = std_curve_holo) #fit linear model
+fitted_holo <- mod_holo %>% broom::augment() #extract the model fitted data
+summary(mod_holo) #report the model fit
+
+# Plot standard curve with line fit
+std_curve_plot_holo <- std_curve_holo %>%
+  ggplot(aes(x = abs562, y = BSA_ug.mL)) + #plot x y
+  geom_point(color = "red", size = 3)+ # color standards
+  geom_line(data = fitted_holo, aes(x = abs562, y = .fitted)) + #add line fit
+  stat_poly_eq(use_label(c("eq", "R2")),rr.digits = 4) + #show line fit equation and R2
+  labs(title = "BSA Protein Standard curve") #label plot
+std_curve_plot_holo #view plot
+
+# Calculate protein concentration for all samples using standard curve
+prot_holo <- df_holo %>%
+  filter(!grepl("Standard", fragment_ID, Timepoint)) %>%  # Get just samples (not standards)
+  select(Well, fragment_ID, Timepoint, abs562) %>%        # Select only needed columns
+  filter(!is.na(fragment_ID)) %>%                         # Filter out empty wells
+  filter(fragment_ID != "BK") %>%                         # Filter out blank wells
+  mutate(prot_ug.mL = map_dbl(abs562, ~ predict(mod_holo, newdata = data.frame(abs562 = .))))    # Use standard curve to convert absorbance to protein
+
+prot_holo <- na.omit(prot_holo) #remove rows with NA
+prot_holo <- prot_holo %>% filter(prot_ug.mL > 0) #remove any rows with impossible values
+
+#plot samples projected onto standards to check that they fall in range of the standards
+std_curve_plot_holo + 
+  geom_point(data = prot_holo, aes(x = abs562, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) + #add points
+  labs(title = "All samples projected on standard curve") #label plot
+
+#start dataframe to add all values to after plate specific calculations
+tpc.holo.protein <- prot_holo
+
 ```
+
+# 20220614 Holo
+# Import data 
+```{r}
+# Load data
+prot_data <- read.csv("data/protein/20230614_Dec_BCA_holobiont_data_prot.csv")         # List all files in directory
+platemap <- read.csv("data/protein/20230614_Dec_BCA_holobiont_platemap_prot.csv")       # List platemap files
+df_holo <- right_join(platemap, prot_data, by="Well") # Merge platemap and data for each plate
+
+# Plot standard curve
+# Create standard curve following kit instructions
+standards_holo <- tribble(
+  ~std, ~BSA_ug.mL,
+  "A",        2000,
+  "B",        1500,
+  "C",        1000,
+  "D",         750,
+  "E",         500,
+  "F",         250,
+  "G",         125,
+  "H",          25,
+  "I",           0
+)
+
+std_curve_holo <- df_holo %>%
+  filter(grepl("Standard", fragment_ID)) %>% #filter standards
+  select(Well, fragment_ID, abs562 = "abs562") %>% #select columns
+  rename(std = fragment_ID) %>% #name id
+  mutate(std = str_sub(std, 9, 9)) %>% #remove the word standard
+  mutate(abs562.adj = abs562 - abs562[std == "I"]) %>%       # subtract blank absorbance value from all
+  left_join(standards_holo) #join with standard concentrations above
+
+#Calculate the calibration curve
+mod_holo <- lm(BSA_ug.mL ~ abs562, data = std_curve_holo) #fit linear model
+fitted_holo <- mod_holo %>% broom::augment() #extract the model fitted data
+summary(mod_holo) #report the model fit
+
+# Plot standard curve with line fit
+std_curve_plot_holo <- std_curve_holo %>%
+  ggplot(aes(x = abs562, y = BSA_ug.mL)) + #plot x y
+  geom_point(color = "red", size = 3)+ # color standards
+  geom_line(data = fitted_holo, aes(x = abs562, y = .fitted)) + #add line fit
+  stat_poly_eq(use_label(c("eq", "R2")),rr.digits = 4) + #show line fit equation and R2
+  labs(title = "BSA Protein Standard curve") #label plot
+std_curve_plot_holo #view plot
+
+# Calculate protein concentration for all samples using standard curve
+prot_holo <- df_holo %>%
+  filter(!grepl("Standard", fragment_ID, Timepoint)) %>%  # Get just samples (not standards)
+  select(Well, fragment_ID, Timepoint, abs562) %>%        # Select only needed columns
+  filter(!is.na(fragment_ID)) %>%                         # Filter out empty wells
+  filter(fragment_ID != "BK") %>%                         # Filter out blank wells
+  mutate(prot_ug.mL = map_dbl(abs562, ~ predict(mod_holo, newdata = data.frame(abs562 = .))))    # Use standard curve to convert absorbance to protein
+
+prot_holo <- na.omit(prot_holo) #remove rows with NA
+prot_holo <- prot_holo %>% filter(prot_ug.mL > 0) #remove any rows with impossible values
+
+#plot samples projected onto standards to check that they fall in range of the standards
+std_curve_plot_holo + 
+  geom_point(data = prot_holo, aes(x = abs562, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) + #add points
+  labs(title = "All samples projected on standard curve") #label plot
+
+#start dataframe to add all values to after plate specific calculations
+tpc.holo.protein <- rbind(tpc.holo.protein, prot_holo)
+
+```
+
+
+# Normalize Holo protein to surface area
+```{r}
+
+tpc.holo.protein$ID <- paste0(tpc.holo.protein$fragment_ID, tpc.holo.protein$Timepoint)
+
+# Join prot data with sample metadata
+prot_holo <- dplyr::inner_join(
+   tpc.holo.protein,
+   dplyr::select(metadata, -any_of(names(tpc.holo.protein)), ID),
+   by = "ID"
+)
+
+
+# Standardize protein to volumne and surface area and mg/cm2
+prot_holo <- prot_holo %>%
+  mutate(prot_ug = prot_ug.mL * homog_vol_ml,
+         prot_ug.cm2 = prot_ug / surface.area.cm2,
+         prot_mg.cm2 = prot_ug.cm2 / 1000)
+
+
+boxplot(prot_mg.cm2~Timepoint, data=prot_holo)
+```
+
+#filter to Hap1a and Hap3b only and the same colonies for both times
+```{r}
+#filter by species
+prot_holo.sub<-prot_holo %>% 
+  filter(mtORF =="Haplotype_1a" | mtORF =="P verrucosa Haplotype 3b") 
+
+#filter by colonies available in May and Dec
+prot_holo.sub.unique <- prot_holo.sub %>% 
+  group_by(fragment_ID) %>% 
+  filter(n_distinct(Timepoint) == 2)
+
+#calculate the mean of the 2 replicate  wells
+prot_holo.sub.unique.means <- prot_holo.sub.unique %>% 
+  group_by(fragment_ID, Timepoint, mtORF) %>% 
+  summarise(prot_mg.cm2 = mean(prot_mg.cm2, na.rm = T))
+
+```
+
+#Statistical testing Holobiont
+```{r}
+
+## Outlier Detection
+
+# 2 way ANOVA
+## Untransformed
+model  <- lm(prot_mg.cm2 ~ mtORF*Timepoint, data = prot_holo.sub.unique.means)
+check_model(model)
+check_outliers(model)
+check_normality(model)
+
+## log10 Transformed
+model.1  <- lm(log10(prot_mg.cm2) ~ mtORF*Timepoint, data = prot_holo.sub.unique.means)
+check_model(model.1)
+check_outliers(model.1)
+check_normality(model.1)
+
+model.Prot.holo  <- lm(log10(prot_mg.cm2) ~ mtORF*Timepoint, data = prot_holo.sub.unique.means)
+anova(model.Prot.holo)
+stat.labels1 <- round(anova(model.Prot.holo), 5)
+
+```
+
+
+
+```{r}
+#summarize  mean and sem by site, species, and partner and plot
+# Plot all data points with mean ± se
+prot_plot_Holo <- prot_holo.sub.unique.means %>%
+  ggplot(aes(x = factor(Timepoint, level = level_order), y = prot_mg.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  labs(x = "", y = expression("Holobiont Soluble Protein mg"~cm^{-2})) +
+  geom_jitter(width = 0.3) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", width = 0.2) +
+  stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
+  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  geom_text(x=1, y=2.65, label=paste("Species=",stat.labels1$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=2.54, label=paste("Time=",stat.labels1$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=2.44, label=paste("Species x Time=",stat.labels1$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
+  theme(axis.text.y = element_text(size=14, face="bold", colour = "black"),axis.text.x = element_text(size=14, face="bold", colour = "black")) +
+  theme_classic(base_size = 14)+
+  theme(legend.position='none')
+prot_plot_Holo 
+
+```
+
+
+<!-- ```{r} -->
+<!--  (prot_plot_Holo+prot_plot_Host)  -->
+<!--   ggsave("output/Poc_TPC_Protein_1a3b.pdf", plot = last_plot(), width = 12, height = 4) -->
+<!--   ggsave("output/Poc_TPC_Protein_1a3b.jpg", plot = last_plot(), width = 12, height = 4) -->
+<!-- ``` -->
+
+
+```{r}
+
+prot_holo.sub.unique.means$ID <- paste0(prot_holo.sub.unique.means$fragment_ID, prot_holo.sub.unique.means$Timepoint)
+prot_host.sub.unique.means$ID <- paste0(prot_host.sub.unique.means$fragment_ID, prot_host.sub.unique.means$Timepoint)
+
+data <- full_join(prot_holo.sub.unique.means,prot_host.sub.unique.means, by="ID")
+
+data$Sym_prot_mg.cm2 <-data$prot_mg.cm2.x - data $prot_mg.cm2.y
+```
+
+#Statistical testing Holobiont
+```{r}
+
+## Outlier Detection
+
+# 2 way ANOVA
+## Untransformed
+model  <- lm(Sym_prot_mg.cm2 ~ mtORF.x*Timepoint.x, data = data)
+check_model(model)
+check_outliers(model)
+check_normality(model)
+
+## log10 Transformed
+model.1  <- lm(log10(Sym_prot_mg.cm2) ~ mtORF.x*Timepoint.x, data = data)
+check_model(model.1)
+check_outliers(model.1)
+check_normality(model.1)
+
+model.Prot.sym  <- lm(log10(Sym_prot_mg.cm2) ~ mtORF.x*Timepoint.x, data = data)
+anova(model.Prot.sym)
+stat.labels1 <- round(anova(model.Prot.sym), 5)
+
+```
+
+
+
+```{r}
+#summarize  mean and sem by site, species, and partner and plot
+# Plot all data points with mean ± se
+prot_plot_Sym <- data %>%
+  ggplot(aes(x = factor(Timepoint.x, level = level_order), y = Sym_prot_mg.cm2, color = mtORF.x, shape=mtORF.x, group = mtORF.x)) +
+  labs(x = "", y = expression("Symbiont Soluble Protein mg"~cm^{-2})) +
+  geom_jitter(width = 0.3) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", width = 0.2) +
+  stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
+  scale_color_manual(name="mtORF.x", values=c("orange", "cyan"))+
+  geom_text(x=1, y=1.50, label=paste("Species=",stat.labels1$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=1.44, label=paste("Time=",stat.labels1$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=1.38, label=paste("Species x Time=",stat.labels1$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
+  theme(axis.text.y = element_text(size=14, face="bold", colour = "black"),axis.text.x = element_text(size=14, face="bold", colour = "black")) +
+  theme_classic(base_size = 14)+
+  theme(legend.position='none')
+prot_plot_Sym 
+
+```
+
+
+
+```{r}
+ (prot_plot_Holo+prot_plot_Host+prot_plot_Sym) 
+  ggsave("output/Poc_TPC_Protein_Allpartner_1a3b.pdf", plot = last_plot(), width = 14, height = 4)
+  ggsave("output/Poc_TPC_Protein_Allpartner_1a3b.jpg", plot = last_plot(), width = 14, height = 4)
+```
+
 

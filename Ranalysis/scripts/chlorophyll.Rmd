@@ -13,15 +13,14 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
-## install packages if you dont already have them
-if (!require("tidyverse")) install.packages("tidyverse")
-if (!require("plotrix")) install.packages("plotrix")
-if (!require("Hmisc")) install.packages("Hmisc")
-
 # load packages
 library(plotrix)
 library(tidyverse)
 library(Hmisc)
+library(performance)
+library(ggpubr)
+library(rstatix)
+library(see)
 
 ```
 
@@ -160,8 +159,18 @@ sa <- read.csv("output/TPC_Phys.surface.area.calc.csv")
 metadata <- read_csv("data/metadata_POC_TPC.csv")
 
 # Join homogenate volumes and surface area with sample metadata
-chl.data <- left_join(metadata, chl.data, by="ID")
-chl.data <- left_join(chl.data, sa, by="ID")
+chl.data <- dplyr::inner_join(
+   chl.data,
+   dplyr::select(metadata, -any_of(names(chl.data)), ID),
+   by = "ID"
+)
+
+chl.data <- dplyr::inner_join(
+   chl.data,
+   dplyr::select(sa, -any_of(names(chl.data)), ID),
+   by = "ID"
+)
+
 
 # Multiply chlorophyll by the homogenate volume and divide by surface area
 chl.data <- chl.data %>%
@@ -175,37 +184,121 @@ chl.data <- filter(chl.data, !ID %in% c("NA", "BK"))
 chl.data %>%
   select(ID, Timepoint.x, Morphology,chla.ug.cm2, chlc2.ug.cm2) %>%
   filter(!is.na(chla.ug.cm2))%>%
-  filter(!is.na(chlc2.ug.cm2))%>%
-  write_csv(path = "output/TPC_Phys_chlorophyll.csv")
+  filter(!is.na(chlc2.ug.cm2))
+ # write_csv(path = "output/TPC_Phys_chlorophyll.csv")
 ```
 
-# Plot results by species and site
-```{r, eval = TRUE}
+#filter to Hap1a and Hap3b only and the same colonies for both times
+```{r}
+chl.sub<-chl.data %>% 
+  filter(mtORF =="Haplotype_1a" | mtORF =="P verrucosa Haplotype 3b")
 
-# Plot chlorophyll a
-chl.data %>%
-  ggplot(aes(x = Morphology, y = chla.ug.cm2, color = Timepoint.x, shape=Timepoint.x)) +
-  scale_color_manual(name="Timepoint.x", values=c("red", "cyan"))+
-  coord_cartesian(ylim = c(0, 6.5))+
-  labs(x = "", y = expression("Chl-a mg"~cm^{-2})) +
-  geom_jitter(width = 0.1) +                                            # Plot all points
+chl.sub.unique <- chl.sub %>% 
+  group_by(fragment_ID.x) %>% 
+  filter(n_distinct(Timepoint.x) == 2)
+
+```
+
+#Statistical testing chla
+```{r}
+
+
+# 2 way ANOVA
+## Untransformed
+model  <- lm(chla.ug.cm2 ~ mtORF*Timepoint.x, data = chl.sub.unique)
+check_model(model)
+check_outliers(model)
+check_normality(model)
+
+## log10 Transformed
+model.1  <- lm(log10(chla.ug.cm2) ~ mtORF*Timepoint.x, data = chl.sub.unique)
+check_model(model.1)
+check_outliers(model.1)
+check_normality(model.1)
+
+model.chla  <- lm(log10(chla.ug.cm2) ~ mtORF*Timepoint.x, data = chl.sub.unique)
+anova(model.chla )
+stat.labels1 <- round(anova(model.chla), 5)
+
+```
+
+#Statistical testing chlc2
+```{r}
+
+## Outlier Detection
+
+# 2 way ANOVA
+## Untransformed
+model  <- lm(chlc2.ug.cm2 ~ mtORF*Timepoint.x, data = chl.sub.unique)
+check_model(model)
+check_outliers(model)
+check_normality(model)
+
+## log10 Transformed
+model.1  <- lm(log10(chlc2.ug.cm2) ~ mtORF*Timepoint.x, data = chl.sub.unique)
+check_model(model.1)
+check_outliers(model.1)
+check_normality(model.1)
+
+model.chlc2  <- lm(log10(chlc2.ug.cm2) ~ mtORF*Timepoint.x, data = chl.sub.unique)
+anova(model.chlc2)
+stat.labels2 <- round(anova(model.chlc2), 5)
+
+```
+
+
+
+```{r}
+#summarize mean and sem by site, species, and partner and plot
+
+level_order <- c('May', 'Dec') 
+
+# Plot all data points with mean ± se
+chla_plot <- chl.sub.unique %>%
+  ggplot(aes(x = factor(Timepoint.x, level = level_order), y = chla.ug.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  labs(x = "", y = expression("Chl-a µg"~cm^{-2})) +
+  geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
-  theme_bw(base_size = 12)
+               geom = "errorbar", width = 0.2) +
+  stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
+  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  geom_text(x=2, y=6.3, label=paste("Species=",stat.labels1$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
+  geom_text(x=2, y=6.1, label=paste("Time=",stat.labels1$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
+  geom_text(x=2, y=5.9, label=paste("Species x Time=",stat.labels1$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
+  theme(axis.text.y = element_text(size=14, face="bold", colour = "black"),axis.text.x = element_text(size=14, face="bold", colour = "black")) +
+  theme_classic(base_size = 14)+
+  theme(legend.position='none')
+chla_plot 
 
-# Plot chlorophyll c2
-chl.data %>%
-  ggplot(aes(x = Morphology, y = chlc2.ug.cm2, color = Timepoint.x, shape=Timepoint.x)) +
-  scale_color_manual(name="Timepoint.x", values=c("red", "cyan"))+
-  coord_cartesian(ylim = c(0, 6.5))+
-  labs(x = "", y = expression("Chl-a mg"~cm^{-2})) +
-  geom_jitter(width = 0.1) +                                            # Plot all points
+
+```
+
+```{r}
+
+# Plot all data points with mean ± se
+chlc2_plot <- chl.sub.unique %>%
+  ggplot(aes(x = factor(Timepoint.x, level = level_order), y = chlc2.ug.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  labs(x = "", y = expression("Chl-c2 µg"~cm^{-2})) +
+  geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
-  theme_bw(base_size = 12)
+               geom = "errorbar", width = 0.2) +
+  stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
+  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  geom_text(x=2, y=1.7, label=paste("Species=",stat.labels2$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
+  geom_text(x=2, y=1.63, label=paste("Time=",stat.labels2$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
+  geom_text(x=2, y=1.56, label=paste("Species x Time=",stat.labels2$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
+  theme(axis.text.y = element_text(size=14, face="bold", colour = "black"),axis.text.x = element_text(size=14, face="bold", colour = "black")) +
+  theme_classic(base_size = 14)+
+  theme(legend.position='none')
+chlc2_plot 
 
+```
+
+
+```{r}
+ (chla_plot+chlc2_plot) 
+  ggsave("output/Poc_TPC_Chl_1a3b.pdf", plot = last_plot(), width = 10, height = 4)
+  ggsave("output/Poc_TPC_Chl_1a3b.jpg", plot = last_plot(), width = 10, height = 4)
 ```
 
 

@@ -1,23 +1,21 @@
 ---
 title: "biomass.Rmd"
 author: "HM Putnam, AS Huffmyer"
-date: "10/26/2021"
+date: "08/08/2023"
 output: html_document
-editor_options: 
-  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
-## install packages if you dont already have them
-if (!require("tidyverse")) install.packages("tidyverse")
-if (!require("plotrix")) install.packages("plotrix")
-
 # load packages
 library(tidyverse)
 library(plotrix)
 library(patchwork)
+library(performance)
+library(ggpubr)
+library(rstatix)
+library(see)
 
 ```
 
@@ -74,19 +72,18 @@ afdw <- left_join(Data, metadata) %>%
 ```
 
 Output biomass data to .csv.  
-
 ```{r}
 dw<-dw %>% 
   group_by(fragment_ID, partner, Timepoint)%>%
   summarise(DW.mg.cm2=mean(DW.mg.cm2))%>%
   left_join(.,metadata)%>% #add metadata back into file
-  select(fragment_ID, Timepoint, partner, Morphology, DW.mg.cm2) 
+  select(fragment_ID, Timepoint, partner, mtORF, DW.mg.cm2) 
 
 afdw<-afdw %>%
   group_by(fragment_ID, partner, Timepoint)%>%
   summarise(AFDW.mg.cm2=mean(AFDW.mg.cm2))%>%
   left_join(.,metadata)%>% #add metadata back into file
-  select(fragment_ID, Timepoint, partner, Morphology, AFDW.mg.cm2)
+  select(fragment_ID, Timepoint, partner, mtORF, AFDW.mg.cm2)
   
 output<-left_join(afdw,dw)%>%
   write_csv(path = "output/TPC_Phys_biomass.csv")
@@ -96,14 +93,14 @@ output<-left_join(afdw,dw)%>%
 #summarize Dry Biomass mean and sem by site, species, and partner and plot
 # Plot all data points with mean ± se
 dw_plot <- dw %>%
-  ggplot(aes(x = Morphology, y = DW.mg.cm2, color = Morphology, shape=Timepoint, group = Timepoint)) +
+  ggplot(aes(x = mtORF, y = DW.mg.cm2, color = mtORF, shape=Timepoint, group = Timepoint)) +
   labs(x = "", y = expression("Dry Biomass mg"~cm^{-2})) +
   geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", width = 0.2) +
   scale_shape_manual(values=c(Dec=16,May=17))+
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
-  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  scale_color_manual(name="mtORF", values=c("orange","yellow", "cyan","blue","black", "grey","red"))+
   theme_bw(base_size = 12)+
   theme(legend.position='none')+
   facet_wrap("partner")
@@ -115,21 +112,157 @@ dw_plot <- dw %>%
 
 # Plot all data points with mean ± se
 afdw_plot <- afdw %>%
-  ggplot(aes(x = Morphology, y = AFDW.mg.cm2, color = Morphology, shape=Timepoint, group = Timepoint)) +
+  ggplot(aes(x = mtORF, y = AFDW.mg.cm2, color = mtORF, shape=Timepoint, group = Timepoint)) +
   labs(x = "", y = expression("AFDW mg"~cm^{-2})) +
   geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", width = 0.2) +
   scale_shape_manual(values=c(Dec=16,May=17))+
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
-  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
+  scale_color_manual(name="mtORF", values=c("orange","yellow", "cyan","blue","black", "grey","red"))+
   theme_bw(base_size = 12)+
   facet_wrap("partner")
 
 ```
 
 
+# ```{r}
+#  (dw_plot+afdw_plot) 
+#   ggsave("output/Poc_TPC_Biomass.pdf", plot = last_plot(), width = 12, height = 6)
+# ```
+
+#filter to Hap1a and Hap3b only and the same colonies for both times
 ```{r}
- (dw_plot+afdw_plot) 
-  ggsave("output/Poc_TPC_Biomass.pdf", plot = last_plot(), width = 12, height = 6)
+dw.sub<-dw %>% 
+  filter(mtORF =="Haplotype_1a" | mtORF =="P verrucosa Haplotype 3b")
+
+dw.sub.unique <- dw.sub %>% 
+  group_by(fragment_ID) %>% 
+  filter(n_distinct(Timepoint) == 2)
+
+afdw.sub<-afdw %>% 
+  filter(mtORF =="Haplotype_1a" | mtORF =="P verrucosa Haplotype 3b")
+
+afdw.sub.unique <- afdw.sub %>% 
+  group_by(fragment_ID) %>% 
+  filter(n_distinct(Timepoint) == 2) 
 ```
+
+#Statistical testing Host
+```{r}
+
+## Outlier Detection
+
+afdw.sub.unique.Host <- afdw.sub.unique %>% 
+  filter(partner == "Host") 
+
+# 2 way ANOVA
+## Untransformed
+model  <- lm(AFDW.mg.cm2 ~ mtORF*Timepoint, data = afdw.sub.unique.Host)
+check_model(model)
+check_outliers(model)
+check_normality(model)
+
+## log10 Transformed
+model.1  <- lm(log10(AFDW.mg.cm2) ~ mtORF*Timepoint, data = afdw.sub.unique.Host)
+check_model(model.1)
+check_outliers(model.1)
+check_normality(model.1)
+
+model.AFDW.Host  <- lm(AFDW.mg.cm2 ~ mtORF*Timepoint, data = afdw.sub.unique.Host)
+anova(model.AFDW.Host)
+stat.labels1 <- round(anova(model.AFDW.Host), 5)
+
+```
+
+#Statistical testing Sym
+```{r}
+
+## Outlier Detection
+
+afdw.sub.unique.Sym <- afdw.sub.unique %>% 
+  filter(partner=="Sym")
+
+# 2 way ANOVA
+## Untransformed
+model  <- lm(AFDW.mg.cm2 ~ mtORF*Timepoint, data = afdw.sub.unique.Sym)
+check_model(model)
+check_outliers(model)
+check_normality(model)
+
+#filter outlier
+afdw.sub.unique.Sym <- afdw.sub.unique.Sym %>% 
+    filter(AFDW.mg.cm2 < 7)
+
+## Rerun Untransformed model
+model  <- lm(AFDW.mg.cm2 ~ mtORF*Timepoint, data = afdw.sub.unique.Sym)
+check_model(model)
+check_outliers(model)
+check_normality(model)
+
+## log10 Transformed
+model.1  <- lm(log10(AFDW.mg.cm2) ~ mtORF*Timepoint, data = afdw.sub.unique.Sym)
+check_model(model.1)
+check_outliers(model.1)
+check_normality(model.1)
+
+
+model.AFDW.Sym  <- lm(log10(AFDW.mg.cm2) ~ mtORF*Timepoint, data = afdw.sub.unique.Sym)
+anova(model.AFDW.Sym)
+stat.labels2 <- round(anova(model.AFDW.Sym), 5)
+
+```
+
+
+
+```{r}
+#summarize Dry Biomass mean and sem by site, species, and partner and plot
+
+level_order <- c('May', 'Dec') 
+
+# Plot all data points with mean ± se
+afdw_plot_Host <- afdw.sub.unique.Host %>%
+  ggplot(aes(x = factor(Timepoint, level = level_order), y = AFDW.mg.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  labs(x = "", y = expression("Host AFDW mg"~cm^{-2})) +
+  geom_jitter(width = 0.3) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", width = 0.2) +
+  stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
+  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  geom_text(x=1, y=7, label=paste("Species=",stat.labels1$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=6.7, label=paste("Time=",stat.labels1$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=6.4, label=paste("Species x Time=",stat.labels1$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
+  theme(axis.text.y = element_text(size=14, face="bold", colour = "black"),axis.text.x = element_text(size=14, face="bold", colour = "black")) +
+  theme_classic(base_size = 14)+
+  theme(legend.position='none')
+afdw_plot_Host 
+
+```
+
+```{r}
+
+# Plot all data points with mean ± se
+afdw_plot_Sym <- afdw.sub.unique.Sym %>%  
+  ggplot(aes(x = factor(Timepoint, level = level_order), y = AFDW.mg.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  labs(x = "", y = expression("Symbiont AFDW mg"~cm^{-2})) +
+  geom_jitter(width = 0.3) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", width = 0.2) +
+  stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
+  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  geom_text(x=1, y=2.6, label=paste("Species=",stat.labels2$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=2.5, label=paste("Time=",stat.labels2$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=2.4, label=paste("Species x Time=",stat.labels2$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
+  theme(axis.text.y = element_text(size=14, face="bold", colour = "black"),axis.text.x = element_text(size=14, face="bold", colour = "black")) +
+  theme_classic(base_size = 14)+
+  theme(legend.position='none')
+afdw_plot_Sym
+```
+
+
+```{r}
+ (afdw_plot_Host+afdw_plot_Sym) 
+  ggsave("output/Poc_TPC_AFDW_1a3b.pdf", plot = last_plot(), width = 12, height = 4)
+  ggsave("output/Poc_TPC_AFDW_1a3b.jpg", plot = last_plot(), width = 12, height = 4)
+```
+

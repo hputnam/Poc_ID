@@ -60,6 +60,8 @@ range(stnds$surface.area.cm2)
 
 sa_may <- smpls
 sa_may$Timepoint <- "May"
+write_csv(sa_may, "data/May_TPC_Phys_surface.area.calc.csv")
+
 ```
 
 #December 2022 Data
@@ -84,6 +86,7 @@ range(stnds$surface.area.cm2)
 
 sa_dec <- smpls.2
 sa_dec$Timepoint <- "Dec"
+write_csv(sa_dec, "data/Dec_TPC_Phys_surface.area.calc.csv")
 
 ```
 
@@ -91,12 +94,12 @@ sa_dec$Timepoint <- "Dec"
 #Save the output for use in normilzation for phys assays
 ```{r}
 
-surface.area.cm2 <- rbind(sa_may, sa_dec)
+#surface.area.cm2 <- rbind(sa_may, sa_dec)
 
-surface.area.cm2$ID <- paste0(surface.area.cm2$fragment_ID, surface.area.cm2$Timepoint)
+#surface.area.cm2$ID <- paste0(surface.area.cm2$fragment_ID, surface.area.cm2$Timepoint)
 
-surface.area.cm2 %>%
-  select(fragment_ID, Timepoint, ID, surface.area.cm2)%>%
-    write_csv("output/TPC_Phys.surface.area.calc.csv")
+#surface.area.cm2 %>%
+#  select(fragment_ID, Timepoint, ID, surface.area.cm2)%>%
+#    write_csv("output/TPC_Phys.surface.area.calc.csv")
 ```
 

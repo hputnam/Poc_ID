@@ -9,81 +9,159 @@ output:
 #Project: Moorea
 #Author: HM Putnam 
 #Edited by: DM Becker-Polinski
-#Date Last Modified: 20220818
+#Date Last Modified: 20230808
 #See Readme file for details
 
 ```{r setup, include = FALSE}
-## install packages if you dont already have them
-if (!require("tidyverse")) install.packages("tidyverse")
 
 # load packages
 library(tidyverse)
+library(plotrix)
+library(patchwork)
+library(performance)
+library(ggpubr)
+library(rstatix)
+library(see)
 ```
 
 # Import data
 ```{r} 
 # Cell count data
-sym_counts <- read_csv("data/TPC_POC_symbiont_counts.csv")
+May_sym_counts <- read_csv("data/May_TPC_symbiont_counts.csv")
 
 # Load Surface area data
-sa <- read.csv("data/TPC_surface.area.calc.csv")
+May_sa <- read.csv("data/May_TPC_Phys_surface.area.calc.csv")
 
-homog.vol <- read_csv("data/homogenate_vols.csv") %>%
-  select(fragment_ID, homog_vol_ml)
+May_homog.vol <- read_csv("data/May_TPC_Phys_homogenate_vols.csv") 
+
+# Cell count data
+Dec_sym_counts <- read_csv("data/Dec_TPC_symbiont_counts.csv")
+
+# Load Surface area data
+Dec_sa <- read.csv("data/Dec_TPC_Phys_surface.area.calc.csv")
+
+Dec_homog.vol <- read_csv("data/Dec_TPC_Phys_homogenate_vols.csv")
+
+
+sa <- rbind(May_sa,Dec_sa)
+sa <- sa%>%
+  select(fragment_ID, Timepoint, surface.area.cm2) 
+sa$ID <- paste0(sa$fragment_ID, sa$Timepoint)
+  
+counts <- rbind(May_sym_counts, Dec_sym_counts)
+counts$ID <- paste0(counts$fragment_ID, counts$Timepoint)
+  
+homog.vol <- rbind(May_homog.vol, Dec_homog.vol)
+homog.vol$ID <- paste0(homog.vol$fragment_ID, homog.vol$Timepoint)
 
 # Coral sample metadata
-metadata <- read_csv("data/metadata_POC_TPC.csv")
+info <- read_csv("data/metadata_POC_TPC.csv")
+info$ID <- paste0(info$fragment_ID, info$Timepoint)
 
 # Join homogenate volumes and surface area with sample metadata
-metadata <- full_join(metadata, homog.vol)  %>%
-  full_join(sa)
+metadata <- right_join(info, homog.vol, by="ID")  %>%
+  right_join(sa)
+
+metadata <- dplyr::inner_join(
+   info,
+   dplyr::select(homog.vol, -any_of(names(info)), ID),
+   by = "ID"
+)
+
+metadata <- dplyr::inner_join(
+   metadata,
+   dplyr::select(sa, -any_of(names(metadata)), ID),
+   by = "ID"
+)
+
 
 ```
 
 # Calculate cells per square centimeter
 ```{r}
 # Calculate mean counts for each sample
-sym_counts <- sym_counts %>%
-  select(fragment_ID, Squares.Counted, matches("Count[0-9]")) %>%
-  gather("rep", "count", -fragment_ID, -Squares.Counted) %>%
-  group_by(fragment_ID, Squares.Counted) %>%
+sym_counts <- counts %>%
+  select(fragment_ID,Timepoint, Squares.Counted, matches("Count[0-9]")) %>%
+  gather("rep", "count", -fragment_ID, -Squares.Counted,-Timepoint) %>%
+  group_by(fragment_ID, Timepoint, Squares.Counted) %>%
   summarise(mean_count = mean(count, na.rm = TRUE))
 
+sym_counts$ID <- paste0(sym_counts$fragment_ID, sym_counts$Timepoint)
+
 # Join mean counts with sample metadata
-sym_counts <- full_join(sym_counts, metadata)
+sym_counts <- full_join(sym_counts, metadata, by="ID")
+sym_counts <- dplyr::inner_join(
+   sym_counts,
+   dplyr::select(metadata, -any_of(names(sym_counts)), ID),
+   by = "ID"
+)
+
 
 # Normalize counts by homogenat volume and surface area
 sym_counts <- sym_counts %>%
   mutate(cells.mL = mean_count * 10000 / Squares.Counted,
          cells = cells.mL * homog_vol_ml,
-         cells.cm2 = cells / surface.area.cm2)
+         cells.cm2 = cells / surface.area.cm2 /10^6)
 ```
 
-
-
-# Plot data
+#filter to Hap1a and Hap3b only and the same colonies for both times
 ```{r}
+sym_counts.sub<-sym_counts %>% 
+  filter(mtORF =="Haplotype_1a" | mtORF =="P verrucosa Haplotype 3b")
+
+sym_counts.sub.unique <- sym_counts.sub %>% 
+  group_by(fragment_ID) %>% 
+  filter(n_distinct(Timepoint) == 2)
+
+```
+
+#Statistical testing 
+```{r}
+
+## Outlier Detection
+
+# 2 way ANOVA
+## Untransformed
+model  <- lm(cells.cm2 ~ mtORF*Timepoint, data = sym_counts.sub.unique)
+check_model(model)
+check_outliers(model)
+check_normality(model)
+
+## log10 Transformed
+model.1  <- lm(log10(cells.cm2) ~ mtORF*Timepoint, data = sym_counts.sub.unique)
+check_model(model.1)
+check_outliers(model.1)
+check_normality(model.1)
+
+model.cell.density  <- lm(log10(cells.cm2) ~ mtORF*Timepoint, data = sym_counts.sub.unique)
+stat.labels <- round(anova(model.cell.density), 3)
+
+
+```
+
+```{r}
+#summarize  mean and sem and plot
+
+level_order <- c('May', 'Dec') 
+
 # Plot all data points with mean ± se
-sym_counts %>%
-  ggplot(aes(x = Morphology, y = cells.cm2 / 10^6, color = Morphology)) +
-  scale_color_manual(name="Morphology", values=c("orange","black", "cyan"))+
-  #coord_cartesian(ylim = c(0, 1.8))+
-  labs(x = "", y = expression("Cell Density (" *x*"10"^"6" *~cells *~ cm^"-2"*")")) +
-  geom_jitter(width = 0.1) +                                            # Plot all points
+symcounts_plot <- sym_counts.sub.unique %>%
+  ggplot(aes(x = factor(Timepoint, level = level_order), y = cells.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  labs(x = "", y = expression(paste("Cells"~cm^{-2}, "x"~10^{6}))) +
+  geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun = mean, geom = "point", color = "black") +           # Plot mean
-  theme_bw(base_size = 12)
+               geom = "errorbar", width = 0.2) +
+  stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
+  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+geom_text(x=2, y=1.0, label=paste("Species=",stat.labels$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
+  geom_text(x=2, y=0.95, label=paste("Time=",stat.labels$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
+  geom_text(x=2, y=0.90, label=paste("Species x Time=",stat.labels$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
+  theme(axis.text.y = element_text(size=14, face="bold", colour = "black"),axis.text.x = element_text(size=14, face="bold", colour = "black")) +
+  theme_classic(base_size = 14)+
+  theme(legend.position='none')
+symcounts_plot
 
-```
-
-
-Output data to file.  
-
-```{r}
-sym_counts %>%
-  select(fragment_ID, Morphology, cells.cm2) %>%
-  write_csv(path = "output/sym_counts.csv")
-
+ggsave("output/Poc_TPC_CellDensity_1a3b.pdf", plot = last_plot(), width = 6, height = 4)
+ggsave("output/Poc_TPC_CellDensity_1a3b.jpg", plot = last_plot(), width = 6, height = 4)
 
 ```
