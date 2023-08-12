@@ -20,15 +20,15 @@ POC-146,146,verrucosa,NA,NA,NA,NA,NA,No
 POC-147,147,meandrina,NA,NA,NA,NA,NA,No
 POC-148,148,verrucosa,NA,NA,NA,NA,NA,No
 POC-152,152,meandrina,POC-152,Manava,Pocillopora,meandrina,NA,No
-POC-155,155,verrucosa,POC-155,Manava,Pocillopora,verrucosa,NA,No
-POC-161,161,meandrina,POC-161,Manava,Pocillopora,meandrina,NA,No
-POC-163,163,grandis,POC-163,Manava,Pocillopora,grandis,NA,No
-POC-164,164,meandrina,POC-164,Manava,Pocillopora,meandrina,NA,No
-POC-170,170,grandis,POC-170,Manava,Pocillopora,grandis,NA,No
-POC-171,171,grandis,POC-171,Manava,Pocillopora,grandis,NA,No
-POC-172,172,grandis,POC-172,Manava,Pocillopora,grandis,NA,No
-POC-173,173,verrucosa,POC-173,Manava,Pocillopora,verrucosa,NA,No
-POC-182,182,verrucosa,POC-182,Manava,Pocillopora,verrucosa,NA,No
+POC-155,155,verrucosa,POC-155,Manava,Pocillopora,verrucosa,"P verrucosa Haplotype 3e,3h,10a",No
+POC-161,161,meandrina,POC-161,Manava,Pocillopora,meandrina,Haplotype_1a,No
+POC-163,163,grandis,POC-163,Manava,Pocillopora,grandis,Haplotype_1a,No
+POC-164,164,meandrina,POC-164,Manava,Pocillopora,meandrina,Haplotype_1a,No
+POC-170,170,grandis,POC-170,Manava,Pocillopora,grandis,P verrucosa Haplotype 3a,No
+POC-171,171,grandis,POC-171,Manava,Pocillopora,grandis,Haplotype_1a,No
+POC-172,172,grandis,POC-172,Manava,Pocillopora,grandis,Haplotype_1a,No
+POC-173,173,verrucosa,POC-173,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,No
+POC-182,182,verrucosa,POC-182,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,No
 POC-166,166,verrucosa,POC-166,Manava,Pocillopora,verrucosa,P_verrucosa_Haplotype_3a,No
 POC-177,177,verrucosa,POC-177,Manava,Pocillopora,verrucosa,P_verrucosa_Haplotype_3a,No
 POC-154,154,verrucosa,POC-154,Manava,Pocillopora,verrucosa,P_verrucosa_Haplotype_3b,Yes

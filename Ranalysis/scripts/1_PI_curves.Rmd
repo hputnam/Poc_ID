@@ -27,42 +27,36 @@ library(future)
 library(furrr)
 ```
 
-
-Need to find a way to load all data files, remove row with Channel = delta_t to get rid of artifact line, then convert time column back into hms???
-
-
-
-## Import data
-```{r}
-path.p <- "data/1_pi_curves/" #the location of all your respirometry files 
+## Import metadata
+```{r, warning = FALSE}
+path.p <- "data/PR/pi_curves/" #the location of all your respirometry files 
 
 # List data files
 file.names <- list.files(path = path.p, pattern = "csv$")  # list all csv file names in the folder
 file.names <- file.names[!grepl("metadata", file.names)]   # omit metadata from files to be read in as data
 
 # Load PI curve sample metadata (i.e., which corals were in which runs)
-sample.info <- read_csv(file = "data/1_pi_curves/1_pi_curves_sample_metadata.csv")
+sample.info <- read_csv(file = "data/PR/pi_curves/pi_curves_sample_metadata.csv")
 
 # Load PI curve run metadata (i.e., light levels and interval times for each run)
-run.info <- read_csv(file = "data/1_pi_curves/1_pi_curves_run_metadata.csv")
-
-
-#test.file<-read_csv(file="data/1_pi_curves/POC-391_20200107.csv", skip=1, col_types = cols(.default = "d", Time = "t")) #do this to correct time format issue
-
+run.info <- read_csv(file = "data/PR/pi_curves/pi_curves_run_metadata.csv")
 
 # Join all coral and run metadata
 metadata <- full_join(sample.info, run.info) %>%
   mutate(Date = as_date(as.character(Date), format = "%Y%m%d", tz = "Tahiti"))
 
-# Select only certain columnns
+# Select only certain columns
 metadata <- metadata %>%
-  select(colony_id, Run, Chamber.Vol.L, Date, Start.time, Stop.time, Light_Value)
+  select(colony_id, Run, Chamber.Vol.L, Date, Start.time, Stop.time, Light_Value, Light_Level)
+```
 
-# Read in all data files 
+
+# Read in all data files
+```{r, results="hide", message=FALSE}
 df <- tibble(file.name = file.names) %>%
   mutate(colony_id = gsub("_.*", "", file.name),                              # Get colony_id from filename
           info = map(colony_id, ~filter(metadata, colony_id == .)),           # Get associated sample info
-         data0 = map(file.name, ~read_csv(file.path(path.p, .), skip = 0)))   # Get associated O2 data
+         data0 = map(file.name, ~read_csv(file.path(path.p, .), skip=0, col_types = cols(.default = "d", Time = "t"))))   # Get associated O2 data
 
 # Select only Time, Value, and Temp columns from O2 data
 df <- df %>%
@@ -72,8 +66,6 @@ df <- df %>%
 ```
 
 ## Use the time breaks in the sample info to link O2 data with light levels
-
-
 ```{r, warning = FALSE}
 df <- df %>%
   mutate(intervals = map2(data0, info, function(.x, .y) {
@@ -81,9 +73,9 @@ df <- df %>%
                       labels = as.character(.y$Light_Value)))})) %>%
   mutate(data = map(intervals, ~ unnest(tibble(.), .id = "Light_Value")))
 
-## 'data' now contains the O2 data with the corresponding light level as another column
+## 'data' now contains the O2 data with the corresponding light value as another column
 ## Example of what 'data' for each sample looks like:
-# df$data[[1]]
+# df$data[[4]]
 ```
 
 ### Thin data
@@ -107,7 +99,7 @@ df <- df %>%
                             labs(title = .y)))
 
 # Example of plots
-cowplot::plot_grid(df$data_plot[[1]], df$thin_data_plot[[1]], nrow = 2,
+cowplot::plot_grid(df$data_plot[[2]], df$thin_data_plot[[2]], nrow = 2,
                    labels = c("Example plot: all data", "Example plot: thinned data"))
 ```
 
@@ -127,7 +119,7 @@ fit_reg <- function(df) {
 }
 
 # Setup for parallel processing
-future::plan(multiprocess)
+future::plan(multisession)
 
 # Map LoLinR function onto all intervals of each sample's thinned dataset
 df <- df %>%
@@ -148,8 +140,27 @@ plot_rankLcRg <- function(colony_id, interval_number) {
 ```
 
 #### The diagnostics for any regression can be plotted like this, specifying a colony_id and the number of the light curve interval:
-```
-plot_rankLcRg("ACR-225", 1)
+```{r}
+# Define function to pull out and plot regression diagnostics
+# plot_rankLcRg <- function(colony_id, interval_number) {
+#   df %>%
+#     filter(colony_id == colony_id) %>%
+#     pluck("regs", 1, "rankLcRg", interval_number) %>%
+#     plot()
+# }
+#THIS FUNCTION IS NOT WORKING BY COLONYID
+# pdf("output/Past-D1_test.pdf")
+# plot_rankLcRg("Past-D1", 1)
+# plot_rankLcRg("Past-D1", 2)
+# plot_rankLcRg("Past-D1", 3)
+# plot_rankLcRg("Past-D1", 4)
+# plot_rankLcRg("Past-D1", 5)
+# plot_rankLcRg("Past-D1", 6)
+# plot_rankLcRg("Past-D1", 7)
+# plot_rankLcRg("Past-D1", 8)
+# plot_rankLcRg("Past-D1", 9)
+# plot_rankLcRg("Past-D1", 10)
+# dev.off()
 ```
 
 ### Extract slope of best regression for each interval for each sample
@@ -163,26 +174,40 @@ df.out <- df %>%
 ```{r}
 ### Merge rates with sample info
 pr <- left_join(
-  select(df.out, colony_id, Light_Value, micromol.L.s),
-  distinct(metadata, colony_id, Run, Chamber.Vol.L)
-)
+  select(df.out,colony_id, Light_Value, micromol.L.s),
+  distinct(metadata,colony_id, Run, Chamber.Vol.L))
 
-### Correct for chamber volume and blanks
+# Correct for chamber volume and blanks
+
+### generate a key for the blank id
 pr <- pr %>%
-  mutate(micromol.s = micromol.L.s * Chamber.Vol.L)
+  mutate(Run_blank_light=paste0(Run,"_","blank","_",Light_Value))%>%
+  mutate(blank_id=paste0(Run,"_","blank"))
 
 # Get blank values -- average for each run and light value in case multiple blanks
 blanks <- pr %>%
   filter(grepl("BK", colony_id)) %>%
+  mutate(micromol.s.blank = micromol.L.s * Chamber.Vol.L)%>%
   group_by(Run, Light_Value) %>%
-  summarise(micromol.s.blank = mean(micromol.s))
+  mutate(blank_id=paste0(Run,"_","blank"))%>%
+  mutate(Run_blank_light=paste0(Run,"_","blank","_",Light_Value))
 
-# Join blank values with rest of data and subtract values from samples for same run and light value
-pr <- left_join(pr, blanks) %>%
+blanks %>% ggplot(aes(x=as.numeric(Light_Value), y=micromol.s.blank,colour = as.factor(Run)))+
+  geom_point()
+
+pr <- pr %>% mutate(micromol.s = micromol.L.s * Chamber.Vol.L)
+
+pr  <- dplyr::inner_join(
+   pr ,
+   dplyr::select(blanks, -any_of(names(pr)), Run_blank_light),
+   by = "Run_blank_light"
+)
+
+#Join blank values with rest of data and subtract values from samples for same run and light value
+pr <- pr %>%
   mutate(micromol.s.adj = micromol.s - micromol.s.blank) %>%
   # After correcting for blank values, remove blanks from data
   filter(!grepl("BK", colony_id))
-
 
 # Import surface area data
 sa <- read.csv("output/1_surface_area.csv")
@@ -198,19 +223,73 @@ pr <- pr %>%
 
 # Plot rates vs. irradiance for each sample
 ```{r, fig.height=15, fig.width = 10}
-ggplot(pr, aes(x = as.numeric(Light_Value), y = micromol.cm2.h)) +
+ggplot(pr, aes(x = as.numeric(Light_Value.x), y = micromol.cm2.h)) +
   geom_point(size = 3) +
-  facet_wrap(~colony_id, scale = "free_y", ncol = 9)
+  facet_wrap(~colony_id, ncol = 3)
 ```
 
-# Write to output file
+# Define data  
+
 ```{r}
-# Select variables to write to file
-pr.out <- pr %>% 
-  select(colony_id, Light_Value, Run, micromol.cm2.s, micromol.cm2.h) %>%
-  mutate(timepoint="timepoint1")
-
-# Write to output file
-write.csv(pr.out, "output/1_pi_curve_rates.csv")
+#specify data
+Data <- pr
+Data$PAR <- as.numeric(Data$Light_Value.x)
+Data$Pc <- as.numeric(Data$micromol.cm2.h)
 ```
 
+
+# Define PI curve function as a nonlinear Least Squares regression of a quadratic fit, test nls fit
+#Pc ~ (Am*((AQY*PAR)/(sqrt(Am^2 + (AQY*PAR)^2)))-Rd), data=., start=list(Am=(max(.$Pc)-min(.$Pc)),  AQY=0.001, Rd=-min(.$Pc))
+Aquatic Photosynthesis, Falkowski 
+PAR = irradiance from 400-700nm (also called I or E)
+PC = oxygen flux rate
+Pmax = max photosynthesis (also called Am)  
+alpha = quantum yeild (also called AQY)  
+I or E or PAR = irradiance 
+Rd = dark respiration
+Ik (saturating irradiance) is the point at which photosynthesis reaches the max of initial slope = Am/AQY
+Ic=(Am*Rd)/(AQY*(sqrt(Am^2-Rd^2)))
+Equation for Ic derived from quadratic equation above. Ic = Par when Pc = 0 (x intercept). Ic = light compensation point; point at which photosynthesis is released from carbon limitation. 
+
+Run nls model 
+Using flexible initial values based on input data:  
+```{r}
+nls_data <- Data %>% 
+   group_by(colony_id) %>%
+   nest(-colony_id) %>%
+   mutate(model1 = map(data, ~ 
+                         nls(Pc ~ (Am*((AQY*PAR)/(sqrt(Am^2 + (AQY*PAR)^2)))-Rd), data=., start=list(Am=(max(.$Pc)-min(.$Pc)),  AQY=0.001, Rd=-min(.$Pc))) %>%
+                              tidy %>%
+                              dplyr::select(term, estimate) %>% 
+                              spread(term, estimate))) %>%
+  unnest(model1) %>%
+  unnest(data) %>%
+  group_by(colony_id)%>%
+  summarise(Am=mean(Am), AQY=mean(AQY), Rd=mean(Rd))%>%
+  mutate(Ik=Am/AQY)%>%
+  mutate(Ic=(Am*Rd)/(AQY*(sqrt(Am^2-Rd^2))))%>%
+  write_csv(., "output/pi_curve_pars_nls.csv")
+
+nls_data
+```
+
+Plot curve over data points.  
+```{r}
+augmented <- Data %>% 
+  nest(-colony_id) %>% 
+  mutate(
+    fit = map(data, ~ nls(Pc ~ (Am*((AQY*PAR)/(sqrt(Am^2 + (AQY*PAR)^2)))-Rd), data=., start=list(Am=0.7,  AQY=0.001, Rd=.4))),
+    augmented = map(fit, augment),
+  ) %>% 
+  unnest(augmented)
+
+#all colonies together
+augmented %>%
+  group_by(colony_id)%>%
+  qplot(PAR, Pc, data = ., geom = 'point', colour = colony_id) +
+  geom_line(aes(y=.fitted))+
+  theme(legend.position="none")
+
+
+
+```
