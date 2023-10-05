@@ -1,0 +1,123 @@
+---
+title: "Photosynthesis TPC fitting by Colony"
+authors: Hollie Putnam 
+edited by: Hollie Putnam 
+date: 20230829
+output: html_document
+---
+
+Load libraries
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(rTPC)
+library(nls.multstart)
+library(broom)
+library(tidyverse)
+```
+
+## Import data
+```{r, warning = FALSE}
+Photodata <- read.csv("data/Dec_Photo_Rawextracted_rates.csv")
+Photodata$temp <- as.numeric(Photodata$Temp.Cat)
+Photodata <- Photodata %>%
+  filter(Temp.Cat!=22)
+Photodata$rate <- log10(Photodata$micromol.cm2.h+1)
+```
+
+TPC fitting 
+Padifeld et al **rTPC and nls.multstart: A new pipeline to fit thermal performance curves in r**  
+https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13585  
+
+Sharpe Schoolfield 1981 model
+Schoolfield, R. M., Sharpe, P. J. H., & Magnuson, C. E. (1981). Non-linear regression of biological temperature-dependent rate models based on absolute reaction-rate theory. Journal of theoretical biology, 88(4), 719-731. https://doi.org/10.1016/0022-5193(81)90246-0
+
+# ```{r}
+# # choose model
+# get_model_names()
+# #sharpeschoolhigh_1981
+# 
+# # get start vals
+# start_vals <- get_start_vals(Photodata$temp,Photodata$transformed.rate, model_name = 'sharpeschoolhigh_1981')
+# 
+# # get limits
+# low_lims <- get_lower_lims(Photodata$temp,Photodata$transformed.rate, model_name = 'sharpeschoolhigh_1981')
+# upper_lims <- get_upper_lims(Photodata$temp,Photodata$transformed.rate, model_name = 'sharpeschoolhigh_1981')
+# 
+# #view values
+# start_vals
+# start_vals <- start_vals %>% replace(is.na(.), 0)
+# start_vals
+# low_lims
+# upper_lims
+# ```
+
+#Individual curve fits test
+```{r}
+# grandis CURVE FIT
+d.grandis.dec <- Photodata %>% 
+  filter(fragment_ID == "POC-156")
+
+plot1 <- ggplot() +
+  geom_point(aes(temp, rate), d.grandis.dec, size = 2, alpha = 0.5,col = 'brown') +
+  theme_bw(base_size = 12) +
+  labs(x = 'Temperature (ºC)',
+       y = 'Log 10 +1 Rate (µmol O2/cm2/h)')
+plot1
+
+```
+
+#Individual curve fits December
+```{r}
+
+d <- Photodata
+
+# when scaling up our code to fit hundreds of models, its nice to have a progress bar
+# edit nls_multstart to allow for a progress bar
+nls_multstart_progress <- function(formula, data = parent.frame(), iter, start_lower, 
+                                   start_upper, supp_errors = c("Y", "N"), convergence_count = 100, 
+                                   control, modelweights, ...){
+  if(!is.null(pb)){
+    pb$tick()
+  }
+  nls_multstart(formula = formula, data = data, iter = iter, start_lower = start_lower, 
+                start_upper = start_upper, supp_errors = supp_errors, convergence_count = convergence_count, 
+                control = control, modelweights = modelweights, ...)
+}
+
+# start progress bar and estimate time it will take
+number_of_models <- 2
+number_of_curves <- length(unique(d$Number))
+
+# setup progress bar
+pb <- progress::progress_bar$new(total = number_of_curves*number_of_models,
+                                 clear = FALSE,
+                                 format ="[:bar] :percent :elapsedfull")
+
+
+
+
+# fit two chosen model formulation in rTPC
+d_fits <- nest(d, data = c(temp, rate)) %>%
+  mutate(gaussian = map(data, ~nls_multstart_progress(rate~gaussian_1987(temp = temp, rmax,topt,a),
+                        data = .x,
+                        iter = c(3,3,3),
+                        start_lower = get_start_vals(.x$temp, .x$rate, model_name = 'gaussian_1987') - 1,
+                        start_upper = get_start_vals(.x$temp, .x$rate, model_name = 'gaussian_1987') + 1,
+                        lower = get_lower_lims(.x$temp, .x$rate, model_name = 'gaussian_1987'),
+                        upper = get_upper_lims(.x$temp, .x$rate, model_name = 'gaussian_1987'),
+                        supp_errors = 'Y',
+                        convergence_count = FALSE)),
+         sharpeschoolhigh = map(data, ~nls_multstart_progress(rate~sharpeschoolhigh_1981(temp = temp, r_tref,e,eh,th, tref = 15),
+                        data = .x,
+                        iter = c(3,3,3,3),
+                        start_lower = get_start_vals(.x$temp, .x$rate, model_name = 'sharpeschoolhigh_1981') - 1,
+                        start_upper = get_start_vals(.x$temp, .x$rate, model_name = 'sharpeschoolhigh_1981') + 1,
+                        lower = get_lower_lims(.x$temp, .x$rate, model_name = 'sharpeschoolhigh_1981'),
+                        upper = get_upper_lims(.x$temp, .x$rate, model_name = 'sharpeschoolhigh_1981'),
+                        supp_errors = 'Y',
+                        convergence_count = FALSE)))
+
+```
+
+

@@ -1,49 +1,49 @@
-﻿fragment_ID,Timepoint,ID,site,species,Morphology,mtORF,Seq
-POC-149,May,POC-149May,Manava,Pocillopora,meandrina,Haplotype10,Yes
-POC-150,May,POC-150May,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-151,May,POC-151May,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-152,May,POC-152May,Manava,Pocillopora,meandrina,NA,No
-POC-154,May,POC-154May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-155,May,POC-155May,Manava,Pocillopora,verrucosa,"P verrucosa Haplotype 3e,3h,10a",Yes
-POC-156,May,POC-156May,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-157,May,POC-157May,Manava,Pocillopora,meandrina,Haplotype_1a,Yes
-POC-159,May,POC-159May,Manava,Pocillopora,grandis,Haplotype_1a,half
-POC-161,May,POC-161May,Manava,Pocillopora,meandrina,Haplotype_1a,Yes
-POC-162,May,POC-162May,Manava,Pocillopora,meandrina,P verrucosa Haplotype 3b,Yes
-POC-163,May,POC-163May,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-164,May,POC-164May,Manava,Pocillopora,meandrina,Haplotype_1a,Yes
-POC-165,May,POC-165May,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-166,May,POC-166May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3a,Yes
-POC-167,May,POC-167May,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-168,May,POC-168May,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-169,May,POC-169May,Manava,Pocillopora,meandrina,P verrucosa Haplotype 3b,Yes
-POC-170,May,POC-170May,Manava,Pocillopora,grandis,P verrucosa Haplotype 3a,Yes
-POC-171,May,POC-171May,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-172,May,POC-172May,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-173,May,POC-173May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-174,May,POC-174May,Manava,Pocillopora,meandrina,Haplotype_1a,Yes
-POC-175,May,POC-175May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-177,May,POC-177May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3a,Yes
-POC-178,May,POC-178May,Manava,Pocillopora,grandis,Unk long Branch off  Hap 1a,Yes
-POC-179,May,POC-179May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-180,May,POC-180May,Manava,Pocillopora,meandrina,Haplotype10,Yes
-POC-181,May,POC-181May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-182,May,POC-182May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-183,May,POC-183May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-184,May,POC-184May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-150,Dec,POC-150Dec,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-154,Dec,POC-154Dec,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-156,Dec,POC-156Dec,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-157,Dec,POC-157Dec,Manava,Pocillopora,meandrina,Haplotype_1a,Yes
-POC-159,Dec,POC-159Dec,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-162,Dec,POC-162Dec,Manava,Pocillopora,meandrina,P verrucosa Haplotype 3b,Yes
-POC-165,Dec,POC-165Dec,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-167,Dec,POC-167Dec,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-168,Dec,POC-168Dec,Manava,Pocillopora,grandis,Haplotype_1a,Yes
-POC-169,Dec,POC-169Dec,Manava,Pocillopora,meandrina,P verrucosa Haplotype 3b,Yes
-POC-174,Dec,POC-174Dec,Manava,Pocillopora,meandrina,Haplotype_1a,Yes
-POC-175,Dec,POC-175Dec,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-178,Dec,POC-178Dec,Manava,Pocillopora,grandis,Unk long Branch off  Hap 1a,Yes
-POC-179,Dec,POC-179Dec,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-181,Dec,POC-181Dec,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,Yes
-POC-178.2,Dec,POC-178.2Dec,Manava,Pocillopora,grandis,Unk long Branch off  Hap 1a,Yes
+﻿fragment_ID,Timepoint,ID,site,genus,Morphology,mtORF,PocHistone,species,Seq,TPCBASS
+POC-149,May,POC-149May,Manava,Pocillopora,meandrina,Haplotype10,NA,meandrina,Yes,No
+POC-150,May,POC-150May,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,Yes,Yes
+POC-151,May,POC-151May,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,Yes,Yes
+POC-152,May,POC-152May,Manava,Pocillopora,meandrina,NA,NA,meandrina,No,No
+POC-154,May,POC-154May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-155,May,POC-155May,Manava,Pocillopora,verrucosa,"P verrucosa Haplotype 3e,3h,10a",NA,verrucosa,Yes,No
+POC-156,May,POC-156May,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,Yes,Yes
+POC-157,May,POC-157May,Manava,Pocillopora,meandrina,Haplotype_1a,,meandrina,Yes,No
+POC-159,May,POC-159May,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,half,Yes
+POC-161,May,POC-161May,Manava,Pocillopora,meandrina,Haplotype_1a,,meandrina,Yes,No
+POC-162,May,POC-162May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-163,May,POC-163May,Manava,Pocillopora,grandis,Haplotype_1a,P grandis,grandis,Yes,No
+POC-164,May,POC-164May,Manava,Pocillopora,meandrina,Haplotype_1a,P meandrina,meandrina,Yes,No
+POC-165,May,POC-165May,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,Yes,Yes
+POC-166,May,POC-166May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3a,NA,verrucosa,Yes,No
+POC-167,May,POC-167May,Manava,Pocillopora,grandis,Haplotype_1a,P grandis,grandis,Yes,Yes
+POC-168,May,POC-168May,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,Yes,Yes
+POC-169,May,POC-169May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-170,May,POC-170May,Manava,Pocillopora,grandis,P verrucosa Haplotype 3a,NA,grandis,Yes,No
+POC-171,May,POC-171May,Manava,Pocillopora,grandis,Haplotype_1a,P grandis,grandis,Yes,No
+POC-172,May,POC-172May,Manava,Pocillopora,grandis,Haplotype_1a,P grandis,grandis,Yes,No
+POC-173,May,POC-173May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,No
+POC-174,May,POC-174May,Manava,Pocillopora,meandrina,Haplotype_1a,,meandrina,Yes,No
+POC-175,May,POC-175May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-177,May,POC-177May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3a,NA,verrucosa,Yes,No
+POC-178,May,POC-178May,Manava,Pocillopora,grandis,Unk long Branch off  Hap 1a,,grandis,Yes,Yes
+POC-179,May,POC-179May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-180,May,POC-180May,Manava,Pocillopora,meandrina,Haplotype10,NA,meandrina,Yes,No
+POC-181,May,POC-181May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-182,May,POC-182May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,No
+POC-183,May,POC-183May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-184,May,POC-184May,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-150,Dec,POC-150Dec,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,Yes,Yes
+POC-154,Dec,POC-154Dec,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-156,Dec,POC-156Dec,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,Yes,Yes
+POC-157,Dec,POC-157Dec,Manava,Pocillopora,meandrina,Haplotype_1a,,meandrina,Yes,No
+POC-159,Dec,POC-159Dec,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,Yes,Yes
+POC-162,Dec,POC-162Dec,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-165,Dec,POC-165Dec,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,Yes,Yes
+POC-167,Dec,POC-167Dec,Manava,Pocillopora,grandis,Haplotype_1a,P grandis,grandis,Yes,Yes
+POC-168,Dec,POC-168Dec,Manava,Pocillopora,grandis,Haplotype_1a,,grandis,Yes,Yes
+POC-169,Dec,POC-169Dec,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-174,Dec,POC-174Dec,Manava,Pocillopora,meandrina,Haplotype_1a,,meandrina,Yes,No
+POC-175,Dec,POC-175Dec,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-178,Dec,POC-178Dec,Manava,Pocillopora,grandis,Unk long Branch off  Hap 1a,NA,grandis,Yes,Yes
+POC-179,Dec,POC-179Dec,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-181,Dec,POC-181Dec,Manava,Pocillopora,verrucosa,P verrucosa Haplotype 3b,NA,verrucosa,Yes,Yes
+POC-178.2,Dec,POC-178.2Dec,Manava,Pocillopora,grandis,Unk long Branch off  Hap 1a,NA,grandis,Yes,NA

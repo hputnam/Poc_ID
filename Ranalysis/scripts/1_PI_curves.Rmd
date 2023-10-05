@@ -21,6 +21,7 @@ library(LoLinR)
 library(tidyverse)
 library(lubridate)
 library(cowplot)
+library(broom)
 
 ## libraries for parallel processing
 library(future)
@@ -137,30 +138,6 @@ plot_rankLcRg <- function(colony_id, interval_number) {
     pluck("regs", 1, "rankLcRg", interval_number) %>%
     plot()
 }
-```
-
-#### The diagnostics for any regression can be plotted like this, specifying a colony_id and the number of the light curve interval:
-```{r}
-# Define function to pull out and plot regression diagnostics
-# plot_rankLcRg <- function(colony_id, interval_number) {
-#   df %>%
-#     filter(colony_id == colony_id) %>%
-#     pluck("regs", 1, "rankLcRg", interval_number) %>%
-#     plot()
-# }
-#THIS FUNCTION IS NOT WORKING BY COLONYID
-# pdf("output/Past-D1_test.pdf")
-# plot_rankLcRg("Past-D1", 1)
-# plot_rankLcRg("Past-D1", 2)
-# plot_rankLcRg("Past-D1", 3)
-# plot_rankLcRg("Past-D1", 4)
-# plot_rankLcRg("Past-D1", 5)
-# plot_rankLcRg("Past-D1", 6)
-# plot_rankLcRg("Past-D1", 7)
-# plot_rankLcRg("Past-D1", 8)
-# plot_rankLcRg("Past-D1", 9)
-# plot_rankLcRg("Past-D1", 10)
-# dev.off()
 ```
 
 ### Extract slope of best regression for each interval for each sample

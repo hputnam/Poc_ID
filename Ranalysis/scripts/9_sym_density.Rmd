@@ -153,9 +153,9 @@ symcounts_plot <- sym_counts.sub.unique %>%
                geom = "errorbar", width = 0.2) +
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
   scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
-geom_text(x=2, y=1.0, label=paste("Species=",stat.labels$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
-  geom_text(x=2, y=0.95, label=paste("Time=",stat.labels$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
-  geom_text(x=2, y=0.90, label=paste("Species x Time=",stat.labels$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
+geom_text(x=1, y=1.0, label=paste("Species=",stat.labels$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=0.95, label=paste("Time=",stat.labels$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
+  geom_text(x=1, y=0.90, label=paste("Species x Time=",stat.labels$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
   theme(axis.text.y = element_text(size=14, face="bold", colour = "black"),axis.text.x = element_text(size=14, face="bold", colour = "black")) +
   theme_classic(base_size = 14)+
   theme(legend.position='none')
