@@ -142,17 +142,21 @@ stat.labels <- round(anova(model.cell.density), 3)
 ```{r}
 #summarize  mean and sem and plot
 
-level_order <- c('May', 'Dec') 
+level_order <- c('May', 'Dec')
+
+sym_counts.sub.unique$group <- paste0(sym_counts.sub.unique$Timepoint, " ", sym_counts.sub.unique$mtORF)
+
 
 # Plot all data points with mean ± se
 symcounts_plot <- sym_counts.sub.unique %>%
-  ggplot(aes(x = factor(Timepoint, level = level_order), y = cells.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  ggplot(aes(x = factor(Timepoint, level = level_order), y = cells.cm2, color = group, shape=mtORF, group = mtORF)) +
   labs(x = "", y = expression(paste("Cells"~cm^{-2}, "x"~10^{6}))) +
   geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", width = 0.2) +
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
-  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  stat_summary(aes(x = Timepoint, group = mtORF), fun = mean, geom = "line", alpha=0.2) +
+  scale_color_manual(name="group", values=c( "orangered","cyan","orange", "aquamarine"))+
 geom_text(x=1, y=1.0, label=paste("Species=",stat.labels$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=0.95, label=paste("Time=",stat.labels$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=0.90, label=paste("Species x Time=",stat.labels$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +

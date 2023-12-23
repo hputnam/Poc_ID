@@ -62,12 +62,10 @@ dw <- left_join(Data, metadata) %>%
   mutate(dry.bioimass.g = (dry.pan.mass.g.vol.corr - initial.mass.g),
          DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2)
 
-
 # Calculate AFDW
 afdw <- left_join(Data, metadata) %>%
   mutate(dry.bioimass.g = (dry.pan.mass.g.vol.corr - burnt.pan.mass.g.vol.corr),
          AFDW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2)
-
 
 ```
 
@@ -219,16 +217,18 @@ stat.labels2 <- round(anova(model.AFDW.Sym), 5)
 #summarize Dry Biomass mean and sem by site, species, and partner and plot
 
 level_order <- c('May', 'Dec') 
+afdw.sub.unique.Host$group <- paste0(afdw.sub.unique.Host$Timepoint, " ", afdw.sub.unique.Host$mtORF)
 
 # Plot all data points with mean ± se
 afdw_plot_Host <- afdw.sub.unique.Host %>%
-  ggplot(aes(x = factor(Timepoint, level = level_order), y = AFDW.mg.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  ggplot(aes(x = factor(Timepoint, level = level_order), y = AFDW.mg.cm2, color = group, shape=mtORF, group = mtORF)) +
   labs(x = "", y = expression("Host AFDW mg"~cm^{-2})) +
   geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", width = 0.2) +
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
-  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  stat_summary(aes(x = Timepoint, group = mtORF), fun = mean, geom = "line", alpha=0.2) +
+  scale_color_manual(name="group", values=c( "orangered","cyan","orange", "aquamarine"))+
   geom_text(x=1, y=7, label=paste("Species=",stat.labels1$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=6.7, label=paste("Time=",stat.labels1$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=6.4, label=paste("Species x Time=",stat.labels1$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
@@ -241,15 +241,19 @@ afdw_plot_Host
 
 ```{r}
 
+afdw.sub.unique.Sym$group <- paste0(afdw.sub.unique.Sym$Timepoint, " ", afdw.sub.unique.Sym$mtORF)
+
+
 # Plot all data points with mean ± se
 afdw_plot_Sym <- afdw.sub.unique.Sym %>%  
-  ggplot(aes(x = factor(Timepoint, level = level_order), y = AFDW.mg.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  ggplot(aes(x = factor(Timepoint, level = level_order), y = AFDW.mg.cm2, color = group, shape=mtORF, group = mtORF)) +
   labs(x = "", y = expression("Symbiont AFDW mg"~cm^{-2})) +
   geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", width = 0.2) +
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
-  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+    stat_summary(aes(x = Timepoint, group = mtORF), fun = mean, geom = "line", alpha=0.2) +
+  scale_color_manual(name="group", values=c( "orangered","cyan","orange", "aquamarine"))+
   geom_text(x=1, y=2.6, label=paste("Species=",stat.labels2$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=2.5, label=paste("Time=",stat.labels2$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=2.4, label=paste("Species x Time=",stat.labels2$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +

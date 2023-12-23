@@ -252,16 +252,18 @@ stat.labels2 <- round(anova(model.chlc2), 5)
 #summarize mean and sem by site, species, and partner and plot
 
 level_order <- c('May', 'Dec') 
+chl.sub.unique$group <- paste0(chl.sub.unique$Timepoint, " ", chl.sub.unique$mtORF)
 
 # Plot all data points with mean ± se
 chla_plot <- chl.sub.unique %>%
-  ggplot(aes(x = factor(Timepoint.x, level = level_order), y = chla.ug.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  ggplot(aes(x = factor(Timepoint.x, level = level_order), y = chla.ug.cm2, color = group, shape=mtORF, group = mtORF)) +
   labs(x = "", y = expression("Chl-a µg"~cm^{-2})) +
   geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", width = 0.2) +
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
-  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+    stat_summary(aes(x = Timepoint, group = mtORF), fun = mean, geom = "line", alpha=0.2) +
+  scale_color_manual(name="group", values=c( "orangered","cyan","orange", "aquamarine"))+
   geom_text(x=2, y=6.3, label=paste("Species=",stat.labels1$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
   geom_text(x=2, y=6.1, label=paste("Time=",stat.labels1$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
   geom_text(x=2, y=5.9, label=paste("Species x Time=",stat.labels1$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
@@ -275,15 +277,19 @@ chla_plot
 
 ```{r}
 
+chl.sub.unique$group <- paste0(chl.sub.unique$Timepoint, " ", chl.sub.unique$mtORF)
+
+
 # Plot all data points with mean ± se
 chlc2_plot <- chl.sub.unique %>%
-  ggplot(aes(x = factor(Timepoint.x, level = level_order), y = chlc2.ug.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  ggplot(aes(x = factor(Timepoint.x, level = level_order), y = chlc2.ug.cm2, color = group, shape=mtORF, group = mtORF)) +
   labs(x = "", y = expression("Chl-c2 µg"~cm^{-2})) +
   geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", width = 0.2) +
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
-  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  stat_summary(aes(x = Timepoint, group = mtORF), fun = mean, geom = "line", alpha=0.2) +
+  scale_color_manual(name="group", values=c( "orangered","cyan","orange", "aquamarine"))+
   geom_text(x=2, y=1.7, label=paste("Species=",stat.labels2$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
   geom_text(x=2, y=1.63, label=paste("Time=",stat.labels2$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
   geom_text(x=2, y=1.56, label=paste("Species x Time=",stat.labels2$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels2$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +

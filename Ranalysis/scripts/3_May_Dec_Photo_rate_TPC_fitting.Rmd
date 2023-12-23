@@ -219,9 +219,9 @@ grandis.boot1_conf_preds.dec <- group_by(grandis.boot1_preds.dec, temp) %>%
 
 # plot bootstrapped CIs
 grandis.CI.plot.dec <- ggplot() +
-  geom_line(aes(temp, .fitted), grandis.preds.dec, col = 'brown') +
-  geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), grandis.boot1_conf_preds.dec, fill = 'brown', alpha = 0.3) +
-  geom_point(aes(temp, transformed.rate), d.grandis.dec, size = 2, alpha = 0.5,col = 'brown') +
+  geom_line(aes(temp, .fitted), grandis.preds.dec, col = 'orange') +
+  geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), grandis.boot1_conf_preds.dec, fill = 'orange', alpha = 0.3) +
+  geom_point(aes(temp, transformed.rate), d.grandis.dec, size = 2, alpha = 0.5,col = 'orange') +
   theme_bw(base_size = 12) +
   labs(x = 'Temperature (ºC)',
        y = 'Log 10 +1 Rate (µmol O2/cm2/h)')
@@ -364,9 +364,9 @@ verrucosa.boot1_conf_preds.dec <- group_by(verrucosa.boot1_preds.dec, temp) %>%
 
 # plot bootstrapped CIs
 verrucosa.CI.plot.dec <- ggplot() +
-  geom_line(aes(temp, .fitted), verrucosa.preds.dec, col = 'blue') +
-  geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), verrucosa.boot1_conf_preds.dec, fill = 'blue', alpha = 0.3) +
-  geom_point(aes(temp, transformed.rate), d.verrucosa.dec, size = 2, alpha = 0.5,col = 'blue') +
+  geom_line(aes(temp, .fitted), verrucosa.preds.dec, col = 'cyan') +
+  geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), verrucosa.boot1_conf_preds.dec, fill = 'cyan', alpha = 0.3) +
+  geom_point(aes(temp, transformed.rate), d.verrucosa.dec, size = 2, alpha = 0.5,col = 'cyan') +
   theme_bw(base_size = 12) +
   labs(x = 'Temperature (ºC)',
        y = 'Log 10 +1 Rate (µmol O2/cm2/h)')
@@ -376,7 +376,7 @@ verrucosa.CI.plot.dec
 #Plot all curves together
 ```{r}
  #set plot colors
-cols <- c("grandis.May"="orange","grandis.Dec"="brown",  "verrucosa.May"="cyan",  "verrucosa.Dec"="blue")
+cols <- c("grandis.May"="orange","grandis.Dec"="orangered",  "verrucosa.May"="aquamarine",  "verrucosa.Dec"="cyan")
   
 # plot data and model fit
 TPC.plot <- ggplot(data=Photodata, aes(x=temp)) +
@@ -384,21 +384,21 @@ TPC.plot <- ggplot(data=Photodata, aes(x=temp)) +
    geom_point(aes(temp, transformed.rate, color="grandis.Dec"), d.grandis.dec, size = 2, alpha = 0.5) +
    geom_point(aes(temp, transformed.rate, color="verrucosa.May"), d.verrucosa.may, size = 2, alpha = 0.5) +
    geom_point(aes(temp, transformed.rate, color="verrucosa.Dec"), d.verrucosa.dec, size = 2, alpha = 0.5) +
-   geom_line(aes(temp, .fitted), grandis.preds.may, col = 'orange', size=2) +
-   geom_line(aes(temp, .fitted), grandis.preds.dec, col = 'brown', size=2) +
-   geom_line(aes(temp, .fitted), verrucosa.preds.may, col = "cyan", size=2) +
-   geom_line(aes(temp, .fitted), verrucosa.preds.dec, col = "blue", size=2) +
+   geom_line(aes(temp, .fitted), grandis.preds.may, col = 'orange', size=2,linetype="dotted") +
+   geom_line(aes(temp, .fitted), grandis.preds.dec, col = 'orangered', size=2) +
+   geom_line(aes(temp, .fitted), verrucosa.preds.may, col = "aquamarine", size=2,linetype="dotted") +
+   geom_line(aes(temp, .fitted), verrucosa.preds.dec, col = "cyan", size=2) +
    geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), grandis.boot1_conf_preds.may, fill = "orange", alpha = 0.3) +
-  geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), grandis.boot1_conf_preds.dec, fill = "brown", alpha = 0.3) +
+  geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), grandis.boot1_conf_preds.dec, fill = "orangered", alpha = 0.3) +
 
-  geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), verrucosa.boot1_conf_preds.may, fill = 'cyan', alpha = 0.3) +
-  geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), verrucosa.boot1_conf_preds.dec, fill = 'blue', alpha = 0.3) +
+  geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), verrucosa.boot1_conf_preds.may, fill = 'aquamarine', alpha = 0.3) +
+  geom_ribbon(aes(temp, ymin = conf_lower, ymax = conf_upper), verrucosa.boot1_conf_preds.dec, fill = 'cyan', alpha = 0.3) +
    xlim(21,37)+
   #ylim(0,0.45)+
    scale_x_continuous(breaks=c(22,24,26,28,30,32,34,36))+
    theme_bw(base_size = 12) +
    scale_colour_manual(name="Morphology",values=cols)+
-   theme(legend.position = "none",
+   theme(
          panel.border = element_blank(), panel.grid.major = element_blank(),
          panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
    labs(x = 'Temperature (ºC)',
@@ -407,6 +407,7 @@ TPC.plot <- ggplot(data=Photodata, aes(x=temp)) +
 TPC.plot 
 
 ggsave("output/Dec_TPC_SharpSchool_Photosynthesis.pdf", TPC.plot, dpi=300, w=8, h=8, units="in")
+ggsave("output/Dec_TPC_SharpSchool_Photosynthesis.jpg", TPC.plot, dpi=300, w=8, h=8, units="in")
 ```
 
 # Bootstrap CI for all TPC parameters
@@ -432,7 +433,7 @@ grandis.ci_extra_params.may <- Boot(grandis.fit_nlsLM.may, f = function(x){unlis
 
 #join the parameters and CIs  
 grandis.ci_extra_params.may <- left_join(grandis.ci_extra_params.may, grandis.extra_params.may)
-grandis.ci_extra_params.may$Treatment <- "Haplotype_1a May"
+grandis.ci_extra_params.may$Treatment <- "P. grandis May"
 ```
 #GRANDIS December
 ```{r}
@@ -450,7 +451,7 @@ grandis.ci_extra_params.dec <- Boot(grandis.fit_nlsLM.dec, f = function(x){unlis
 
 #join the parameters and CIs  
 grandis.ci_extra_params.dec <- left_join(grandis.ci_extra_params.dec, grandis.extra_params.dec)
-grandis.ci_extra_params.dec$Treatment <- "Haplotype_1a December"
+grandis.ci_extra_params.dec$Treatment <- "P. grandis December"
 ```
 
 
@@ -470,7 +471,7 @@ verrucosa.ci_extra_params.may <- Boot(verrucosa.fit_nlsLM.may, f = function(x){u
   
 #join the parameters and CIs  
 verrucosa.ci_extra_params.may <- left_join(verrucosa.ci_extra_params.may, verrucosa.extra_params.may)
-verrucosa.ci_extra_params.may$Treatment <- "P_verrucosa_Haplotype_3b May"
+verrucosa.ci_extra_params.may$Treatment <- "P. verrucosa May"
 ```
 
 #VERRUCOSA December
@@ -489,7 +490,7 @@ verrucosa.ci_extra_params.dec <- Boot(verrucosa.fit_nlsLM.dec, f = function(x){u
   
 #join the parameters and CIs  
 verrucosa.ci_extra_params.dec <- left_join(verrucosa.ci_extra_params.dec, verrucosa.extra_params.dec)
-verrucosa.ci_extra_params.dec$Treatment <- "P_verrucosa_Haplotype_3b December"
+verrucosa.ci_extra_params.dec$Treatment <- "P. verrucosa December"
 ```
 
 #Join Morphology estimates and CIs
@@ -498,10 +499,15 @@ All_params <- rbind(grandis.ci_extra_params.may, grandis.ci_extra_params.dec,  v
 All_params <- All_params %>% 
  mutate_if(is.numeric, round, 2)
 
+#order levels
+All_params$Treatment <- factor(All_params$Treatment, levels = c("P. grandis May", "P. verrucosa May", "P. grandis December", "P. verrucosa December"))
+All_params$Treatment
+
+
 #Plot all of the estimates
 estimate.plots <- ggplot(All_params, aes(Treatment, estimate, color=Treatment)) +
   geom_point(size = 2) +
-  scale_color_manual(name="Treatment", values=c("brown","orange", "blue",  "cyan"))+
+  scale_color_manual(name="Treatment", values=c("orange","aquamarine", "orangered","cyan"))+
   geom_linerange(aes(ymin = conf_lower, ymax = conf_upper)) +
   theme_bw() +
   facet_wrap(~param, scales = 'free_y') +
@@ -515,6 +521,7 @@ All_params <- All_params %>%
   filter(!param=="eh") %>%
   #filter(!param=="rmax") %>%
   filter(!param=="skewness") %>%
+  filter(!param=="thermal_safety_margin") %>%
   #filter(!param=="topt") %>%
   filter(!param=="thermal_tolerance") %>%
   filter(!param=="q10") %>%
@@ -524,10 +531,10 @@ All_params <- All_params %>%
 #view estimate plots
 estimate.plots <- ggplot(All_params, aes(Treatment, estimate, color=Treatment)) +
   geom_point(size = 2) +
-  scale_color_manual(name="Treatment", values=c("brown","orange", "blue",  "cyan"))+
+  scale_color_manual(name="Treatment", values=c("orange","aquamarine", "orangered","cyan"))+
   geom_linerange(aes(ymin = conf_lower, ymax = conf_upper)) +
   theme_bw() +
-  labs(y = NULL)+
+  labs(y = NULL, color=NULL)+
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         legend.position = "right",
@@ -535,11 +542,13 @@ estimate.plots <- ggplot(All_params, aes(Treatment, estimate, color=Treatment)) 
         strip.placement = "outside") +
   facet_wrap(~param, scales = 'free_y', nrow=1)+
              #labeller = as_labeller(c(e = "e (Energy)", eh = " eh (Energy)", rmax= "Rmax (~nmol~O[2] ~larva^{-1}~min^{-1})",topt="Topt (Temperature °C)")), strip.position = "left") +
+  theme(legend.position = "none")+
   scale_x_discrete('')
 
 estimate.plots
 
 ggsave("output/Dec_TPC_estimates_SharpSchool_Photosynthesis.pdf", estimate.plots, dpi=300, w=6, h=2, units="in")
+ggsave("output/Dec_TPC_estimates_SharpSchool_Photosynthesis.jpg", estimate.plots, dpi=300, w=6, h=2, units="in")
 ``` 
 
 #Plot Curve and Estimate Output
@@ -552,5 +561,6 @@ figure <- ggarrange(TPC.plot , estimate.plots,
 figure
 
 ggsave("output/MayDec_Photosynthesis_TPC_and_estimates.pdf", figure, dpi=300, w=6, h=8, units="in")
+ggsave("output/MayDec_Photosynthesis_TPC_and_estimates.jpg", figure, dpi=300, w=6, h=8, units="in")
 
 ```

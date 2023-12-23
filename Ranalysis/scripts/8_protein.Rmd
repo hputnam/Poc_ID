@@ -266,16 +266,18 @@ stat.labels1 <- round(anova(model.Prot.Host), 5)
 #summarize  mean and sem by site, species, and partner and plot
 
 level_order <- c('May', 'Dec') 
+prot_host.sub.unique.means$group <- paste0(prot_host.sub.unique.means$Timepoint, " ", prot_host.sub.unique.means$mtORF)
 
 # Plot all data points with mean ± se
 prot_plot_Host <- prot_host.sub.unique.means %>%
-  ggplot(aes(x = factor(Timepoint, level = level_order), y = prot_mg.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  ggplot(aes(x = factor(Timepoint, level = level_order), y = prot_mg.cm2, color = group, shape=mtORF, group = mtORF)) +
   labs(x = "", y = expression("Host Soluble Protein mg"~cm^{-2})) +
   geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", width = 0.2) +
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
-  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  stat_summary(aes(x = Timepoint, group = mtORF), fun = mean, geom = "line", alpha=0.2) +
+  scale_color_manual(name="group", values=c( "orangered","cyan","orange", "aquamarine"))+
   geom_text(x=1, y=1.30, label=paste("Species=",stat.labels1$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=1.25, label=paste("Time=",stat.labels1$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=1.20, label=paste("Species x Time=",stat.labels1$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
@@ -490,14 +492,18 @@ stat.labels1 <- round(anova(model.Prot.holo), 5)
 ```{r}
 #summarize  mean and sem by site, species, and partner and plot
 # Plot all data points with mean ± se
+
+prot_holo.sub.unique.means$group <- paste0(prot_holo.sub.unique.means$Timepoint, " ", prot_holo.sub.unique.means$mtORF)
+
 prot_plot_Holo <- prot_holo.sub.unique.means %>%
-  ggplot(aes(x = factor(Timepoint, level = level_order), y = prot_mg.cm2, color = mtORF, shape=mtORF, group = mtORF)) +
+  ggplot(aes(x = factor(Timepoint, level = level_order), y = prot_mg.cm2, color = group, shape=mtORF, group = mtORF)) +
   labs(x = "", y = expression("Holobiont Soluble Protein mg"~cm^{-2})) +
   geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", width = 0.2) +
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
-  scale_color_manual(name="mtORF", values=c("orange", "cyan"))+
+  stat_summary(aes(x = Timepoint, group = mtORF), fun = mean, geom = "line", alpha=0.2) +
+  scale_color_manual(name="group", values=c( "orangered","cyan","orange", "aquamarine"))+
   geom_text(x=1, y=2.65, label=paste("Species=",stat.labels1$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=2.54, label=paste("Time=",stat.labels1$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=2.44, label=paste("Species x Time=",stat.labels1$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
@@ -555,14 +561,17 @@ stat.labels1 <- round(anova(model.Prot.sym), 5)
 ```{r}
 #summarize  mean and sem by site, species, and partner and plot
 # Plot all data points with mean ± se
+data$group <- paste0(data$Timepoint.x, " ", data$mtORF.x)
+
 prot_plot_Sym <- data %>%
-  ggplot(aes(x = factor(Timepoint.x, level = level_order), y = Sym_prot_mg.cm2, color = mtORF.x, shape=mtORF.x, group = mtORF.x)) +
+  ggplot(aes(x = factor(Timepoint.x, level = level_order), y = Sym_prot_mg.cm2, color = group, shape=mtORF.x, group = mtORF.x)) +
   labs(x = "", y = expression("Symbiont Soluble Protein mg"~cm^{-2})) +
   geom_jitter(width = 0.3) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
                geom = "errorbar", width = 0.2) +
   stat_summary(fun = mean, geom = "point", size=3) +           # Plot mean
-  scale_color_manual(name="mtORF.x", values=c("orange", "cyan"))+
+  stat_summary(aes(x = Timepoint.x, group = mtORF.x), fun = mean, geom = "line", alpha=0.2) +
+  scale_color_manual(name="group", values=c( "orangered","cyan","orange", "aquamarine"))+
   geom_text(x=1, y=1.50, label=paste("Species=",stat.labels1$`Pr(>F)`[1]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[1] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=1.44, label=paste("Time=",stat.labels1$`Pr(>F)`[2]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[2] < 0.05, "black", "darkgray")) + 
   geom_text(x=1, y=1.38, label=paste("Species x Time=",stat.labels1$`Pr(>F)`[3]), size=3, color=ifelse(stat.labels1$`Pr(>F)`[3] < 0.05, "black", "darkgray")) +
@@ -576,9 +585,9 @@ prot_plot_Sym
 
 
 ```{r}
- (prot_plot_Holo+prot_plot_Host+prot_plot_Sym) 
-  ggsave("output/Poc_TPC_Protein_Allpartner_1a3b.pdf", plot = last_plot(), width = 14, height = 4)
-  ggsave("output/Poc_TPC_Protein_Allpartner_1a3b.jpg", plot = last_plot(), width = 14, height = 4)
+ (prot_plot_Host+prot_plot_Sym) 
+  ggsave("output/Poc_TPC_Protein_Allpartner_1a3b.pdf", plot = last_plot(), width = 10, height = 4)
+  ggsave("output/Poc_TPC_Protein_Allpartner_1a3b.jpg", plot = last_plot(), width = 10, height = 4)
 ```
 
 
