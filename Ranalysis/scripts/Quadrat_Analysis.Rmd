@@ -99,3 +99,53 @@ counts <- data %>%
   summarise(Count = n()) 
 
 ```
+
+```{r}
+
+T2.RA <- T2 %>%
+  group_by(Label) %>%
+  summarise(Count = n()) %>% 
+  mutate(freq=Count/sum(Count))
+T2.RA$Transect <- "Transect 2"
+
+colors <- c("Acropora"="yellow",   "D_coral" = "gray",    "MACR_Cal_H" ="green",  "MAL"="lightgreen", "Monti"="purple", 
+            "Pocillopor" = "coral", "Por Mass D" = "lightyellow", "Porites" ="brown", "Sand"= "tan", "Turbin" = "darkgreen",
+            "Turf" = "cyan", "UOth" = "black", "UnkMacroa" = "blue",  "Unkn coral" = "darkgray")
+
+T2.RA.plot <- T2.RA %>%
+  ggplot(aes(x = Transect, y = freq, fill = Label)) +
+  geom_col() +
+  scale_fill_manual(values = colors)+
+  theme_bw() +
+  ylab("Relative Abundance") +
+  xlab("Transect")
+T2.RA.plot
+
+```
+keep only corals for analysis
+```{r}
+# Define the labels to filter out
+labels_to_exclude <- c("D_coral", "MACR_Cal_H", "MAL", "Por Mass D", "Sand", "Turbin", "Turf", "UOth", "UnkMacroa")
+
+# Filter the dataframe to exclude the specified labels
+T2_filtered <- T2 %>%
+  filter(!Label %in% labels_to_exclude)
+
+
+T2.Cor.RA <- T2_filtered %>%
+  group_by(Label) %>%
+  summarise(Count = n()) %>% 
+  mutate(freq=Count/sum(Count))
+T2.Cor.RA$Transect <- "Transect 2"
+
+T2.RA.Cor.plot <- T2.Cor.RA %>%
+  ggplot(aes(x = Transect, y = freq, fill = Label)) +
+  geom_col() +
+  scale_fill_manual(values = colors)+
+  theme_bw() +
+  ylab("Relative Abundance") +
+  xlab("Transect")
+T2.RA.Cor.plot 
+
+
+```
