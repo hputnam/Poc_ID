@@ -13,50 +13,65 @@ library(tidyverse)
 Load Data
 ```{r}
 data <- read.csv("data/Quadrats_TPC_20240615.csv")
+data_2 <- read.csv("data/Quadrats_transect_2_50_points_20240619.csv")
 
 data$Name <- gsub(".JPG", "", data$Name)
 data$Name <- gsub("-_", "_", data$Name)
 
-T1 <- data %>% filter(str_detect(Name, "T1"))
-T1$Name <- gsub("TPC_Transect_1TPC_", "", T1$Name)
-T1 <- T1 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-counts <- T1 %>%
-  group_by(Transect, Quad) %>%
-  summarise(Count = n()) 
+data_2$Name <- gsub(".JPG", "", data_2$Name)
+data_2$Name <- gsub("-_", "_", data_2$Name)
+
+
+#T1 <- data %>% filter(str_detect(Name, "T1"))
+#T1$Name <- gsub("TPC_Transect_1TPC_", "", T1$Name)
+#T1 <- T1 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+#counts <- T1 %>%
+#  group_by(Transect, Quad) %>%
+#  summarise(Count = n()) 
 #quadrat #20 was not analyzed due to bad image
 #quadrat #02 was analyzed 2 times
 
+#data with 30 points 
 T2 <- data %>% filter(str_detect(Name, "T2"))
 T2$Name <- gsub("TPC_Quadrats_transect_2TPC_", "", T2$Name)
 T2 <- T2 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
 counts <- T2 %>%
   group_by(Transect, Quad) %>%
   summarise(Count = n()) 
-#this one looks good
 
-T3 <- data %>% filter(str_detect(Name, "T3"))
-T3$Name <- gsub("TPC_poc_transect_3TPC_", "", T3$Name)
-T3 <- T3 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-counts <- T3 %>%
+#data with 50 points
+T2_2 <- data_2 %>% filter(str_detect(Name, "T2"))
+T2_2$Name_2 <- gsub("TPC_Quadrats_transect_2TPC_", "", T2$Name)
+T2_2 <- T2 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+counts <- T2 %>%
   group_by(Transect, Quad) %>%
   summarise(Count = n()) 
+
+#this one looks good
+
+#T3 <- data %>% filter(str_detect(Name, "T3"))
+#T3$Name <- gsub("TPC_poc_transect_3TPC_", "", T3$Name)
+#T3 <- T3 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+#counts <- T3 %>%
+#  group_by(Transect, Quad) %>%
+#  summarise(Count = n()) 
 #quadrat 00 is doubled
 #quadrat 36 is doubled
 
-T4 <- data %>% filter(str_detect(Name, "T4"))
-T4$Name <- gsub("TPC_poc_Transect_4TPC_", "", T4$Name)
-T4 <- T4 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-counts <- T4 %>%
-  group_by(Transect, Quad) %>%
-  summarise(Count = n()) 
+#T4 <- data %>% filter(str_detect(Name, "T4"))
+#T4$Name <- gsub("TPC_poc_Transect_4TPC_", "", T4$Name)
+#T4 <- T4 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+#counts <- T4 %>%
+#  group_by(Transect, Quad) %>%
+#  summarise(Count = n()) 
 #quadrat 38 is doubled
 
-T5 <- data %>% filter(str_detect(Name, "TPC_poc_Transect_5TPC_Q"))
-T5$Name <- gsub("TPC_poc_Transect_5TPC_", "", T5$Name)
-T5 <- T5 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-counts <- T5 %>%
-  group_by(Transect, Quad) %>%
-  summarise(Count = n()) 
+#T5 <- data %>% filter(str_detect(Name, "TPC_poc_Transect_5TPC_Q"))
+#T5$Name <- gsub("TPC_poc_Transect_5TPC_", "", T5$Name)
+#T5 <- T5 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+#counts <- T5 %>%
+#  group_by(Transect, Quad) %>%
+#  summarise(Count = n()) 
 #quadrat 00 is 4 times
 #quadrat 10 is doubled
 #quadrat 16 is doubled
@@ -65,12 +80,12 @@ counts <- T5 %>%
 #quadrat 22 is doubled
 #quadrat 26 is doubled
 
-T6 <- data %>% filter(str_detect(Name, "T6"))
-T6$Name <- gsub("TPC_poc_Transect_6TPC_", "", T6$Name)
-T6 <- T6 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-counts <- T6 %>%
-  group_by(Transect, Quad) %>%
-  summarise(Count = n()) 
+#T6 <- data %>% filter(str_detect(Name, "T6"))
+#T6$Name <- gsub("TPC_poc_Transect_6TPC_", "", T6$Name)
+#T6 <- T6 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+#counts <- T6 %>%
+#  group_by(Transect, Quad) %>%
+#  summarise(Count = n()) 
 #quadrat 00 is missing
 #quadrat 02 is missing
 
@@ -79,6 +94,7 @@ counts <- T6 %>%
 
 
 ```{r}
+#Data with 30 points
 data$Name <- gsub("TPC_Transect_1TPC_", "", data$Name)
 data$Name <- gsub("TPC_Quadrats_transect_2TPC_", "", data$Name)
 data$Name <- gsub("TPC_poc_transect_3TPC_", "", data$Name)
@@ -95,6 +111,21 @@ data <- data %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
 
 
 counts <- data %>%
+  group_by(Transect, Quad) %>%
+  summarise(Count = n()) 
+
+#data with 50 points
+data_2$Name <- gsub("TPC_Transect_1TPC_", "", data_2$Name)
+data_2$Name <- gsub("TPC_Quadrats_transect_2TPC_", "", data_2$Name)
+data_2$Name <- gsub("TPC_poc_TransectTPC_", "", data_2$Name)
+data_2$Name <- gsub("TPC_TPC_", "", data_2$Name)
+data_2$Name <- gsub("TPC_", "", data_2$Name)
+
+#split first column into metadata
+data_2 <- data_2 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+
+
+counts <- data_2 %>%
   group_by(Transect, Quad) %>%
   summarise(Count = n()) 
 
