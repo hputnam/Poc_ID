@@ -1,0 +1,38 @@
+---
+title: "Species_Relative_Abundance"
+author: "HM Putnam"
+date: "2024-06-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(gridExtra)
+```
+
+
+```{r}
+data <- read.csv("../Sanger_Data/Transect_Seqs/Poc_Transect_Seqs.csv")
+
+```
+
+```{r}
+RA <- data %>%
+  group_by(mtORF.ID) %>%
+  summarise(Count = n()) %>% 
+  mutate(freq=Count/sum(Count))%>% 
+  mutate(Site="Manava")
+
+
+
+RA.plot <- RA %>%
+  ggplot(aes(x = Site, y = freq, fill = mtORF.ID)) +
+  geom_col() +
+  scale_fill_manual(values = c("gray", "#0072B2","#D55E00", "#009E73", "#009E73","#E69F00","#CC79A7"))+
+  theme_bw() +
+  ylab("Relative Abundance") +
+  xlab("Site")
+RA.plot
+
+
+```
