@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 Date,Site,Transect,Coral_ID,SeqRun,mtORF.For.Name,mtORF.Rev.Name,20240619.Status,mtORF.ID,PocHistone.ID,Species.ID,Lifestage,Size
+=======
+﻿Date,Site,Transect,Coral_ID,SeqRun,mtORF.For.Name,mtORF.Rev.Name,20240619.Status,mtORF.ID,PocHistone.ID,Species.ID,Lifestage,Size
+>>>>>>> 9bb6218713b3b14ad486599d7b4b47a466f8debd
 20220601,Manava,1,POC-201-T1,KXTP_221115B,KXTP199_221115B,KXTP200_221115B,Complete,Haplotype 1,,,,
 20220601,Manava,1,POC-202-T1,KXTP_221103A,KXTP141_221103A,KXTP142_221103A,Complete,Haplotype 1,,,,
 20220601,Manava,1,POC-203-T1,KXTP_220825B,KXTP75_220825B,KXTP76_220825B,Complete,Haplotype 1,,,,
