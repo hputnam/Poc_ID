@@ -12,12 +12,16 @@ library(tidyverse)
 
 Load Data
 ```{r}
+#30 points
 data <- read.csv("data/Quadrats_TPC_20240615.csv")
+#50 points
 data_2 <- read.csv("data/Quadrats_transect_2_50_points_20240619.csv")
 
+#30 points
 data$Name <- gsub(".JPG", "", data$Name)
 data$Name <- gsub("-_", "_", data$Name)
 
+#50 points
 data_2$Name <- gsub(".JPG", "", data_2$Name)
 data_2$Name <- gsub("-_", "_", data_2$Name)
 
@@ -43,6 +47,14 @@ counts <- T2 %>%
 T2_2 <- data_2 %>% filter(str_detect(Name, "T2"))
 T2_2$Name_2 <- gsub("TPC_Quadrats_transect_2TPC_", "", T2$Name)
 T2_2 <- T2 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+counts <- T2 %>%
+  group_by(Transect, Quad) %>%
+  summarise(Count = n()) 
+
+#data with 100 points 
+T2_3 <- data_3 %>% filter(str_detect(Name, "T2"))
+T2_3$Name_3 <- gsub("100_", "", T2$Name)
+T2_3 <- T2 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
 counts <- T2 %>%
   group_by(Transect, Quad) %>%
   summarise(Count = n()) 
@@ -129,6 +141,17 @@ counts <- data_2 %>%
   group_by(Transect, Quad) %>%
   summarise(Count = n()) 
 
+
+#data with 100 points
+data_3$Name <- gsub("100_TPC_", "", data_3$Name)
+
+#split first column into metadata
+data_3 <- data_3 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+
+counts <- data_3 %>%
+  group_by(Transect, Quad) %>%
+  summarise(Count = n()) 
+
 ```
 
 ```{r}
@@ -151,6 +174,8 @@ T2.RA.plot <- T2.RA %>%
   ylab("Relative Abundance") +
   xlab("Transect")
 T2.RA.plot
+
+
 
 ```
 keep only corals for analysis
@@ -178,5 +203,28 @@ T2.RA.Cor.plot <- T2.Cor.RA %>%
   xlab("Transect")
 T2.RA.Cor.plot 
 
+
+```
+
+```{r}
+#data with 100 points
+T2_100.RA <- T2 %>%
+  group_by(Label) %>%
+  summarise(Count = n()) %>% 
+  mutate(freq=Count/sum(Count))
+T2_100.RA$Transect <- "Transect 2"
+
+colors <- c("Acropora"="yellow",   "D_coral" = "gray",    "MACR_Cal_H" ="green",  "MAL"="lightgreen", "Monti"="purple", 
+            "Pocillopor" = "coral", "Por Mass D" = "lightyellow", "Porites" ="brown", "Sand"= "tan", "Turbin" = "darkgreen",
+            "Turf" = "cyan", "UOth" = "black", "UnkMacroa" = "blue",  "Unkn coral" = "darkgray")
+
+T2_100.RA.plot <- T2_100.RA %>%
+  ggplot(aes(x = Transect, y = freq, fill = Label)) +
+  geom_col() +
+  scale_fill_manual(values = colors)+
+  theme_bw() +
+  ylab("Relative Abundance") +
+  xlab("Transect")
+T2_100.RA.plot
 
 ```
