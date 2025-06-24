@@ -1,0 +1,32 @@
+---
+title: "size_class_Relative_abundance"
+author: "Pierrick"
+date: "2025-06-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggmap)
+#library(ggsn)
+library(gridExtra)
+library(cowplot)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+#load size data
+
+size_data <- read.csv ("data/20250620_Size_class_TPC.csv")
+
+#load haplotype/ species data 
+species_data <- read.csv ("/Users/pierrickharnay/Documents/MyProjects/Poc_ID/Sanger_Data/Transect_Seqs/Poc_Transect_Seqs.csv")
+```
+
+
+
