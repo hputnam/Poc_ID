@@ -28,5 +28,97 @@ size_data <- read.csv ("data/20250620_Size_class_TPC.csv")
 species_data <- read.csv ("/Users/pierrickharnay/Documents/MyProjects/Poc_ID/Sanger_Data/Transect_Seqs/Poc_Transect_Seqs.csv")
 ```
 
+```{r}
+# Calculate the average of the Diameter columns
+
+size_data_average <- size_data %>%
+  mutate(Average.Diameter.cm = rowMeans(select(., Diameter.1, Diameter.2, Diameter.3), na.rm = TRUE))
+
+```
+
+```{r}
+# remove colum that i dont want in species_data 
+species_data_clean <- species_data %>% select(-Date, -Site, -Transect, -SeqRun, -mtORF.For.Name, -mtORF.Rev.Name, -X20240619.Status, -PocHistone.ID, -Lifestage, -Size)
+
+#code to change name of culum in size_data_average
+colnames(size_data_average)[1]<- "Coral_ID"
+
+#code to merge the color with the species from the file Poc_Transect_Seqs 
+data <- left_join(species_data_clean, size_data_average, by="Coral_ID")
+
+#now i want to put a color on for each species
+cols.species <- data(Species = factor(c("P. tuahiniensis",
+                                            "P. meandrina P. grandis",
+                                            "P. verrucosa",
+                                            "P. grandis",
+                                            "P. effusa",
+                                            "P. acuta",
+                                            "P. meandrina")),
+                         Color = c("#D55E00",
+                                   "#0072B2",
+                                   "#E69F00",
+                                   "#56B4E9",
+                                   "#009E73",
+                                   "#e63946",
+                                   "#CC79A7"))
+                                   
+
+#prepare the way to make the plot of the size average in function of the species 
+colnames(data)
+
+
+# Define the break points for the categories
+breaks <- c(0,2, 5, 14, Inf)  # Adjust these values as needed
+labels <- c("0-2cm", ">2cm-5cm", ">5cm-14cm", ">14cm")  # Category labels
+
+# Create a new column for LifeStage based on Average.Diameter.cm
+data$LifeStage <- cut(data$Average.Diameter.cm, 
+                      breaks = breaks, 
+                      labels = labels, 
+                      right = FALSE)  # Use right=FALSE to make intervals [a, b)
+
+```
+
+```{r}
+#creation of the graph with species and size 
+#filtering the data to keep only the one available 
+data_sp <- data %>%
+  filter(!is.na(Site) & !is.na(LifeStage)& !is.na(Species.ID) )
+
+relative_abundance.manava <- data_sp %>%
+  group_by(Transect, LifeStage, Species.ID) %>%
+  summarise(Count = n(), .groups = 'drop') %>%
+  group_by(Transect, LifeStage) %>%
+  mutate(Relative_Abundance = Count / sum(Count)) %>%
+  ungroup()
+
+relative_abundance.manava$ Transect <- factor(relative_abundance.manava$Transect, levels = c("1","2","3", "4", "5","6","7"))
+
+# Calculate sample size for each Site and LifeStage
+sample_sizes_manava <- relative_abundance.manava %>%
+  group_by(Transect, LifeStage) %>%
+  summarise(Sample_Size = sum(Count), .groups = "drop")
+
+RA.manava.plot_species <- ggplot(sample_sizes_manava, aes(x = Transect, y = relative_abundance.manava, fill = Species.ID)) +
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(~ LifeStage, ncol=5) +
+  labs(x = "Transect",
+       y = "Relative Abundance") +
+  theme_minimal() +  # Clean theme
+  scale_y_continuous(labels = scales::percent) +  # Convert y-axis to percentage
+  scale_fill_manual(values = cols.species) +  # Set the fill colors
+  theme_minimal() +
+  coord_flip()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") 
+
+  # Add sample size text
+  geom_text(data = sample_sizes_manava, aes(x = Site, y = 1.1, label = Sample_Size),inherit.aes = FALSE, size = 2, vjust = 0, color = "black")
+RA.manava.plot_species 
+
+
+```
+
+
+
 
 
