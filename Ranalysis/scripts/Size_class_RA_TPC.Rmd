@@ -1,0 +1,188 @@
+---
+title: "size_class_Relative_abundance"
+author: "Pierrick"
+date: "2025-06-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggmap)
+#library(ggsn)
+library(gridExtra)
+library(cowplot)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+#load size data
+
+size_data <- read.csv ("data/20250620_Size_class_TPC.csv")
+#code to change name of column in size_data_average
+colnames(size_data)[1] <- "Coral_ID"
+#POC-324-T6 no photo available
+#POC-166-T3 excluded for bad photo
+size_data <- size_data %>%
+  filter(Coral_ID != "POC-324-T6") %>%
+  filter(Coral_ID != "POC-166-T3")
+
+
+#load haplotype/ species data 
+species_data <- read.csv ("../Sanger_Data/Transect_Seqs/Poc_Transect_Seqs.csv")
+species_data <- species_data %>%
+  filter(Coral_ID != "POC-324-T6") %>%
+  filter(Coral_ID != "POC-166-T3")
+
+```
+
+```{r}
+# Calculate the average of the Diameter columns
+size_data <- size_data %>%
+  mutate(Average.Diameter.cm = rowMeans(select(., Diameter.1, Diameter.2, Diameter.3), na.rm = TRUE)) %>%
+  select(-Transect)
+
+```
+
+```{r}
+# remove colum that i dont want in species_data 
+#species_data_clean <- species_data %>% select(-Date, -Site, -Transect, -SeqRun, -mtORF.For.Name, #-mtORF.Rev.Name, -X20240619.Status, -PocHistone.ID, -Lifestage, -Size)
+
+
+
+#code to merge the size with the species from the file Poc_Transect_Seqs 
+data <- left_join(species_data, size_data, by = "Coral_ID")
+
+#now i want to put a color on for each species
+cols.species <- c(
+  "P. tuahiniensis" = "#D55E00",
+  "P. meandrina P. grandis" = "#0072B2",
+  "P. verrucosa" = "#E69F00",
+  "P. grandis" = "#56B4E9",
+  "P. effusa" = "#009E73",
+  "P. acuta" = "#e63946",
+  "P. meandrina" = "#CC79A7"
+)
+
+
+# Define the break points for the categories
+breaks <- c(0, 5, 14, Inf)  # Adjust these values as needed
+labels <- c( "0cm-5cm", ">5cm-14cm", ">14cm")  # Category labels
+
+# Create a new column for SizeClass based on Average.Diameter.cm
+data$SizeClass <- cut(data$Average.Diameter.cm, 
+                      breaks = breaks, 
+                      labels = labels, 
+                      right = FALSE)  
+
+
+```
+
+```{r}
+#creation of the graph with species and size 
+#filtering the data to exclude NAs
+data_sp <- data %>%
+  filter(X20240619.Status !="Fail")
+
+#calculate relative abundance by Transect, SizeClass, species
+relative_abundance.manava <- data_sp %>%
+  group_by(Transect, SizeClass, Species.ID) %>%
+  summarise(Count = n(), .groups = 'drop') %>%
+  group_by(Transect, SizeClass) %>%
+  mutate(Relative_Abundance = Count / sum(Count)) %>%
+  ungroup()
+
+relative_abundance.manava$Transect <- factor(relative_abundance.manava$Transect, levels = c("1", "2", "3", "4", "5", "6", "7"))
+
+# Calculate sample size for each Site and LifeStage
+#sample_sizes_manava <- relative_abundance.manava %>%
+#  group_by(Transect, LifeStage) %>%
+#  summarise(Sample_Size = sum(Count), .groups = "drop")
+
+ggplot(relative_abundance.manava, aes(x = Transect, y = Relative_Abundance, fill = Species.ID)) +
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(~ SizeClass, ncol = 5)
+
+```
+
+```{r}
+
+#calculate relative abundance by SizeClass, species
+relative_abundance.manava <- data_sp %>%
+  group_by(Site.x, SizeClass, Species.ID) %>%
+  summarise(Count = n(), .groups = 'drop') %>%
+  group_by(SizeClass) %>%
+  mutate(Relative_Abundance = Count / sum(Count)) %>%
+  ungroup()
+
+
+# Calculate sample size for each Site and LifeStage
+#sample_sizes_manava <- relative_abundance.manava %>%
+#  group_by(Transect, LifeStage) %>%
+#  summarise(Sample_Size = sum(Count), .groups = "drop")
+
+fig1 <- ggplot(relative_abundance.manava, aes(x = Site.x, y = Relative_Abundance, fill = Species.ID)) +
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(~ SizeClass, ncol = 3)
+```
+
+```{r}
+#calculate relative abundance by SizeClass, species
+relative_abundance.manava <- data_sp %>%
+  group_by(Site.x,Species.ID) %>%
+  summarise(Count = n(), .groups = 'drop') %>%
+  mutate(Relative_Abundance = Count / sum(Count)) %>%
+  ungroup()
+
+
+# Calculate sample size for each Site and LifeStage
+#sample_sizes_manava <- relative_abundance.manava %>%
+#  group_by(Transect, LifeStage) %>%
+#  summarise(Sample_Size = sum(Count), .groups = "drop")
+
+fig2 <- ggplot(relative_abundance.manava, aes(x = Site.x, y = Relative_Abundance, fill = Species.ID)) +
+  geom_bar(stat = "identity", position = "fill") 
+
+```
+
+Arrange figures
+```{r}
+
+fig1, fig2
+
+```
+
+
+RA.manava.plot_species <- ggplot(relative_abundance.manava, aes(x = Transect, y = Relative_Abundance, fill = Species.ID)) +
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(~ SizeClass, ncol = 5) +
+  labs(x = "Transect",
+       y = "Relative Abundance") +
+  theme_minimal() +  # Clean theme
+  scale_y_continuous(labels = scales::percent) +  # Convert y-axis to percentage
+  scale_fill_manual(values = cols.species) +  # Set the fill colors
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") +
+  
+  # Add sample size text
+#  geom_text(data = sample_sizes_manava, aes(x = Transect, y = 1.1, label = Sample_Size),
+#            inherit.aes = FALSE, size = 2, vjust = 0, color = "black")
+
+RA.manava.plot_species
+
+
+
+
+```
+
+```{r}
+#
+```
+
+
+
+
