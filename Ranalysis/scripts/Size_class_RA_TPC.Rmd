@@ -17,6 +17,8 @@ library(gridExtra)
 library(cowplot)
 library(dplyr)
 library(tidyr)
+library(forcats)
+library(patchwork)
 ```
 
 ```{r}
@@ -63,7 +65,7 @@ cols.species <- c(
   "P. meandrina P. grandis" = "#0072B2",
   "P. verrucosa" = "#E69F00",
   "P. grandis" = "#56B4E9",
-  "P. effusa" = "#009E73",
+  "P. cf effusa" = "#009E73",
   "P. acuta" = "#e63946",
   "P. meandrina" = "#CC79A7"
 )
@@ -103,10 +105,12 @@ relative_abundance.manava$Transect <- factor(relative_abundance.manava$Transect,
 #  group_by(Transect, LifeStage) %>%
 #  summarise(Sample_Size = sum(Count), .groups = "drop")
 
-ggplot(relative_abundance.manava, aes(x = Transect, y = Relative_Abundance, fill = Species.ID)) +
+fig1 <- ggplot(relative_abundance.manava, aes(x = Transect, y = Relative_Abundance, fill = Species.ID)) +
   geom_bar(stat = "identity", position = "fill") +
-  facet_wrap(~ SizeClass, ncol = 5)
+  facet_wrap(~ SizeClass, ncol = 5) +
+  scale_fill_manual(values = cols.species) 
 
+fig1 
 ```
 
 ```{r}
@@ -125,9 +129,29 @@ relative_abundance.manava <- data_sp %>%
 #  group_by(Transect, LifeStage) %>%
 #  summarise(Sample_Size = sum(Count), .groups = "drop")
 
-fig1 <- ggplot(relative_abundance.manava, aes(x = Site.x, y = Relative_Abundance, fill = Species.ID)) +
+fig2 <- ggplot(relative_abundance.manava, aes(x = Site.x, y = Relative_Abundance, fill = Species.ID)) +
   geom_bar(stat = "identity", position = "fill") +
-  facet_wrap(~ SizeClass, ncol = 3)
+  facet_wrap(~ SizeClass, ncol = 3) +
+  scale_fill_manual(values = cols.species) 
+
+fig2
+
+fig3 <- ggplot(relative_abundance.manava, aes(x = Site.x, y = Relative_Abundance, fill = Species.ID)) +
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(~ SizeClass, ncol = 1, strip.position = "left") +  # Fixed strip.position
+  scale_fill_manual(values = cols.species) +
+  coord_flip() +
+  theme(
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    strip.placement = "outside",
+    strip.background = element_blank(),
+    panel.spacing = unit(0.2, "lines"),
+    axis.text.y = element_blank()  # Fixed comma and placement
+  ) +
+  labs(x = NULL)
+
+fig3
 ```
 
 ```{r}
@@ -144,16 +168,22 @@ relative_abundance.manava <- data_sp %>%
 #  group_by(Transect, LifeStage) %>%
 #  summarise(Sample_Size = sum(Count), .groups = "drop")
 
-fig2 <- ggplot(relative_abundance.manava, aes(x = Site.x, y = Relative_Abundance, fill = Species.ID)) +
-  geom_bar(stat = "identity", position = "fill") 
+fig4 <- ggplot(relative_abundance.manava, aes(x = Site.x, y = Relative_Abundance, fill = Species.ID)) +
+  geom_bar(stat = "identity", position = "fill") +
+  scale_fill_manual(values = cols.species) 
 
+fig4
 ```
 
 Arrange figures
 ```{r}
+#add in one figure the figure 3 and 4
 
-fig1, fig2
+fig5 <- (fig3 + fig4) + 
+  plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom")
 
+fig5
 ```
 
 
