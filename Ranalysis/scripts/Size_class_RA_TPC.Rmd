@@ -276,7 +276,7 @@ pdf("output/Coral_Relative_Abundance.pdf", width=3, height=4)
 RA.Cor.plot <- Cor.RA %>%
   ggplot(aes(x = Site, y = freq, fill = Label)) +
   geom_col() +
-  scale_fill_manual(values = colors)+
+  #scale_fill_manual(values = colors)+
   theme_bw() +
   ylab("Relative Abundance") +
   xlab("Site")
