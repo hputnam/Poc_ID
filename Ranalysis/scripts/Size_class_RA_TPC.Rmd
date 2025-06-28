@@ -185,6 +185,261 @@ fig5 <- (fig3 + fig4) +
 
 fig5
 ```
+```{r}
+#adding the code for the quadrats data and make the plot 
+#loading data
+library(tidyverse)
+
+#load the quadrats data 100 points quadrats analysis 
+data_quadrats <- read.csv("data/100_quadrats_data_TPC.csv")
+
+#reformatting the column name 
+data_quadrats$Name <- gsub(".JPG", "", data_quadrats$Name)
+data_quadrats$Name <- gsub("-_", "_", data_quadrats$Name)
+
+#remove the 100_TPC_ on the name of each data point when the data got extracted on CoralNet
+data_quadrats$Name<- gsub("100_TPC_", "", data_quadrats$Name)
+
+#separe the Quadrats number, site, transect and num of the 
+data_quadrats <- data_quadrats %>% separate(Name, c("Quad", "Site", "Transect"))
+unique(data_quadrats$Transect)
+
+#T3 <- data_quadrats %>% filter(str_detect(Transect, "T3"))
+#T4 <- data_quadrats %>% filter(str_detect(Transect, "T4"))
+#T5 <- data_quadrats %>% filter(str_detect(Transect, "T5"))
+
+#data.subset <- rbind(T3, T4, T5)
+
+counts <- data.subset %>%
+  group_by(Transect, Quad) %>%
+  summarise(Count = n()) 
+#data with 100 points
+RA.100 <- data.subset %>%
+  group_by(Label) %>%
+  summarise(Count = n()) %>% 
+  mutate(freq=Count/sum(Count))
+
+RA.100$Site <- "Manava"
+
+unique(RA.100$Label)
+
+colors <- c("Acropora"="yellow",  "AlgalTurf"="lightgreen", "Astrea" = "lightyellow", "D_coral" = "gray",    "Goniastrea" ="lightblue", "Halimeda" ="green",  "MAL"="lightgreen", "Leptoseris" = "cyan", "Monti"="purple", "Pocill" = "coral", "Porites" ="brown", "Sand"= "tan", "Tur_orn" = "darkgreen", "Unk" = "darkgray")
+
+
+pdf("output/Benthic_Relative_Abundance.pdf", width=3, height=4)
+RA.plot <- RA.100 %>%
+  ggplot(aes(x = Site, y = freq, fill = Label)) +
+  geom_col() +
+  scale_fill_manual(values = colors)+
+  theme_bw() +
+  ylab("Relative Abundance") +
+  xlab("Site")
+RA.plot
+dev.off()
+
+```
+
+keep only corals for analysis
+```{r}
+# Define the labels to filter out
+labels_to_exclude <- c("AlgalTurf",   "D_coral", "Halimeda",  "MAL", "Sand", "Tur_orn", "Unk")
+
+# Filter the dataframe to exclude the specified labels
+RA.100_filtered <- data.subset %>%
+  filter(!Label %in% labels_to_exclude)
+
+Cor.RA <- RA.100_filtered %>%
+  group_by(Label) %>%
+  summarise(Count = n()) %>% 
+  mutate(freq=Count/sum(Count))
+Cor.RA$Site <- "Manava"
+
+pdf("output/Coral_Relative_Abundance.pdf", width=3, height=4)
+RA.Cor.plot <- Cor.RA %>%
+  ggplot(aes(x = Site, y = freq, fill = Label)) +
+  geom_col() +
+  scale_fill_manual(values = colors)+
+  theme_bw() +
+  ylab("Relative Abundance") +
+  xlab("Site")
+RA.Cor.plot 
+dev.off()
+
+```
+
+
+
+```{r}
+#this one looks good
+
+#T3 <- data %>% filter(str_detect(Name, "T3"))
+#T3$Name <- gsub("TPC_poc_transect_3TPC_", "", T3$Name)
+#T3 <- T3 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+#counts <- T3 %>%
+#  group_by(Transect, Quad) %>%
+#  summarise(Count = n()) 
+#quadrat 00 is doubled
+#quadrat 36 is doubled
+
+#T4 <- data %>% filter(str_detect(Name, "T4"))
+#T4$Name <- gsub("TPC_poc_Transect_4TPC_", "", T4$Name)
+#T4 <- T4 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+#counts <- T4 %>%
+#  group_by(Transect, Quad) %>%
+#  summarise(Count = n()) 
+#quadrat 38 is doubled
+
+#T5 <- data %>% filter(str_detect(Name, "TPC_poc_Transect_5TPC_Q"))
+#T5$Name <- gsub("TPC_poc_Transect_5TPC_", "", T5$Name)
+#T5 <- T5 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+#counts <- T5 %>%
+#  group_by(Transect, Quad) %>%
+#  summarise(Count = n()) 
+#quadrat 00 is 4 times
+#quadrat 10 is doubled
+#quadrat 16 is doubled
+#quadrat 18 is doubled
+#quadrat 20 is doubled
+#quadrat 22 is doubled
+#quadrat 26 is doubled
+
+#T6 <- data %>% filter(str_detect(Name, "T6"))
+#T6$Name <- gsub("TPC_poc_Transect_6TPC_", "", T6$Name)
+#T6 <- T6 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+#counts <- T6 %>%
+#  group_by(Transect, Quad) %>%
+#  summarise(Count = n()) 
+#quadrat 00 is missing
+#quadrat 02 is missing
+
+```
+
+
+
+```{r}
+#Data with 30 points
+data$Name <- gsub("TPC_Transect_1TPC_", "", data$Name)
+data$Name <- gsub("TPC_Quadrats_transect_2TPC_", "", data$Name)
+data$Name <- gsub("TPC_poc_transect_3TPC_", "", data$Name)
+data$Name <- gsub("TPC_poc_Transect_4TPC_", "", data$Name)
+data$Name <- gsub("TPC_poc_Transect_6TPC_", "", data$Name)
+data$Name <- gsub("TPC_poc_Transect_5TPC_", "", data$Name)
+data$Name <- gsub("TPC_poc_TransectTPC_", "", data$Name)
+data$Name <- gsub("TPC_TPC_", "", data$Name)
+data$Name <- gsub("TPC_", "", data$Name)
+
+
+#split first column into metadata
+data <- data %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+
+
+counts <- data %>%
+  group_by(Transect, Quad) %>%
+  summarise(Count = n()) 
+
+#data with 50 points
+data_2$Name <- gsub("TPC_Transect_1TPC_", "", data_2$Name)
+data_2$Name <- gsub("TPC_Quadrats_transect_2TPC_", "", data_2$Name)
+data_2$Name <- gsub("TPC_poc_TransectTPC_", "", data_2$Name)
+data_2$Name <- gsub("TPC_TPC_", "", data_2$Name)
+data_2$Name <- gsub("TPC_", "", data_2$Name)
+
+#split first column into metadata
+data_2 <- data_2 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+
+
+counts <- data_2 %>%
+  group_by(Transect, Quad) %>%
+  summarise(Count = n()) 
+
+
+#data with 100 points
+data_3$Name <- gsub("100_TPC_", "", data_3$Name)
+
+#split first column into metadata
+data_3 <- data_3 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
+
+counts <- data_3 %>%
+  group_by(Transect, Quad) %>%
+  summarise(Count = n()) 
+
+```
+
+```{r}
+
+T2.RA <- T2 %>%
+  group_by(Label) %>%
+  summarise(Count = n()) %>% 
+  mutate(freq=Count/sum(Count))
+T2.RA$Transect <- "Transect 2"
+
+colors <- c("Acropora"="yellow",   "D_coral" = "gray",    "MACR_Cal_H" ="green",  "MAL"="lightgreen", "Monti"="purple", 
+            "Pocillopor" = "coral", "Por Mass D" = "lightyellow", "Porites" ="brown", "Sand"= "tan", "Turbin" = "darkgreen",
+            "Turf" = "cyan", "UOth" = "black", "UnkMacroa" = "blue",  "Unkn coral" = "darkgray")
+
+T2.RA.plot <- T2.RA %>%
+  ggplot(aes(x = Transect, y = freq, fill = Label)) +
+  geom_col() +
+  scale_fill_manual(values = colors)+
+  theme_bw() +
+  ylab("Relative Abundance") +
+  xlab("Transect")
+T2.RA.plot
+
+
+
+```
+keep only corals for analysis
+```{r}
+# Define the labels to filter out
+labels_to_exclude <- c("D_coral", "MACR_Cal_H", "MAL", "Por Mass D", "Sand", "Turbin", "Turf", "UOth", "UnkMacroa")
+
+# Filter the dataframe to exclude the specified labels
+T2_filtered <- T2 %>%
+  filter(!Label %in% labels_to_exclude)
+
+
+T2.Cor.RA <- T2_filtered %>%
+  group_by(Label) %>%
+  summarise(Count = n()) %>% 
+  mutate(freq=Count/sum(Count))
+T2.Cor.RA$Transect <- "Transect 2"
+
+T2.RA.Cor.plot <- T2.Cor.RA %>%
+  ggplot(aes(x = Transect, y = freq, fill = Label)) +
+  geom_col() +
+  scale_fill_manual(values = colors)+
+  theme_bw() +
+  ylab("Relative Abundance") +
+  xlab("Transect")
+T2.RA.Cor.plot 
+
+
+```
+
+```{r}
+#data with 100 points
+T2_100.RA <- T2 %>%
+  group_by(Label) %>%
+  summarise(Count = n()) %>% 
+  mutate(freq=Count/sum(Count))
+T2_100.RA$Transect <- "Transect 2"
+
+colors <- c("Acropora"="yellow",   "D_coral" = "gray",    "MACR_Cal_H" ="green",  "MAL"="lightgreen", "Monti"="purple", 
+            "Pocillopor" = "coral", "Por Mass D" = "lightyellow", "Porites" ="brown", "Sand"= "tan", "Turbin" = "darkgreen",
+            "Turf" = "cyan", "UOth" = "black", "UnkMacroa" = "blue",  "Unkn coral" = "darkgray")
+
+T2_100.RA.plot <- T2_100.RA %>%
+  ggplot(aes(x = Transect, y = freq, fill = Label)) +
+  geom_col() +
+  scale_fill_manual(values = colors)+
+  theme_bw() +
+  ylab("Relative Abundance") +
+  xlab("Transect")
+T2_100.RA.plot
+
+```
+```
 
 
 RA.manava.plot_species <- ggplot(relative_abundance.manava, aes(x = Transect, y = Relative_Abundance, fill = Species.ID)) +
@@ -203,6 +458,7 @@ RA.manava.plot_species <- ggplot(relative_abundance.manava, aes(x = Transect, y 
 #            inherit.aes = FALSE, size = 2, vjust = 0, color = "black")
 
 RA.manava.plot_species
+
 
 
 
