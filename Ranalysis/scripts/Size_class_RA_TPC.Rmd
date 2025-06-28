@@ -185,12 +185,14 @@ fig5 <- (fig3 + fig4) +
 
 fig5
 ```
+loading and cleaning data 
 ```{r}
 #adding the code for the quadrats data and make the plot 
 #loading data
 library(tidyverse)
 
-#load the quadrats data 100 points quadrats analysis 
+#load the quadrats data 100 points quadrats analysis
+#100 points X 6 transects X 26 quadrats (experimental des)
 data_quadrats <- read.csv("data/100_quadrats_data_TPC.csv")
 
 #reformatting the column name 
@@ -200,37 +202,48 @@ data_quadrats$Name <- gsub("-_", "_", data_quadrats$Name)
 #remove the 100_TPC_ on the name of each data point when the data got extracted on CoralNet
 data_quadrats$Name<- gsub("100_TPC_", "", data_quadrats$Name)
 
-#separe the Quadrats number, site, transect and num of the 
+#remove column name "Row" and "Column" because no need for the analysis 
+data_quadrats <- data_quadrats  %>%
+  select(-Row, -Column)
+
+#Take the "Name" and separate the name in 3 parts. in my case i separate the quadrats number, the site number and the transect number
 data_quadrats <- data_quadrats %>% separate(Name, c("Quad", "Site", "Transect"))
+
+#check what my code did and double check if I have the number of quadrat, site and transect that I want
+unique(data_quadrats$Quad)
+unique(data_quadrats$Site)
 unique(data_quadrats$Transect)
 
-#T3 <- data_quadrats %>% filter(str_detect(Transect, "T3"))
-#T4 <- data_quadrats %>% filter(str_detect(Transect, "T4"))
-#T5 <- data_quadrats %>% filter(str_detect(Transect, "T5"))
+#need to check why I do not have the number of datapoint expected. I expect 15600 and I have only 15400
+#NOTE: dpuble check on CoralNet quadrats 02 and 20 from T1
+summury1 <- data_quadrats %>%
+  count(Transect)
+summury2 <- data_quadrats %>%
+  count(Transect, Quad)
 
-#data.subset <- rbind(T3, T4, T5)
+# NOTE need to rebuild quadrat Q00 from T5 and T6 
 
-counts <- data.subset %>%
-  group_by(Transect, Quad) %>%
-  summarise(Count = n()) 
+```
+
+Calculating relative abundance and plotting data
+```{r} 
 #data with 100 points
-RA.100 <- data.subset %>%
-  group_by(Label) %>%
+RA.100 <- data_quadrats %>%
+  group_by(Site, Label) %>%
   summarise(Count = n()) %>% 
   mutate(freq=Count/sum(Count))
 
-RA.100$Site <- "Manava"
 
 unique(RA.100$Label)
 
-colors <- c("Acropora"="yellow",  "AlgalTurf"="lightgreen", "Astrea" = "lightyellow", "D_coral" = "gray",    "Goniastrea" ="lightblue", "Halimeda" ="green",  "MAL"="lightgreen", "Leptoseris" = "cyan", "Monti"="purple", "Pocill" = "coral", "Porites" ="brown", "Sand"= "tan", "Tur_orn" = "darkgreen", "Unk" = "darkgray")
+#colors <- c("Acropora"="yellow",  "AlgalTurf"="lightgreen", "Astrea" = "lightyellow", "D_coral" = "gray",    "Goniastrea" ="lightblue", "Halimeda" ="green",  "MAL"="lightgreen", "Leptoseris" = "cyan", "Monti"="purple", "Pocill" = "coral", "Porites" ="brown", "Sand"= "tan", "Tur_orn" = "darkgreen", "Unk" = "darkgray")
 
 
 pdf("output/Benthic_Relative_Abundance.pdf", width=3, height=4)
 RA.plot <- RA.100 %>%
   ggplot(aes(x = Site, y = freq, fill = Label)) +
   geom_col() +
-  scale_fill_manual(values = colors)+
+  #scale_fill_manual(values = colors)+
   theme_bw() +
   ylab("Relative Abundance") +
   xlab("Site")
@@ -242,12 +255,17 @@ dev.off()
 keep only corals for analysis
 ```{r}
 # Define the labels to filter out
+unique(RA.100$Label)
 labels_to_exclude <- c("AlgalTurf",   "D_coral", "Halimeda",  "MAL", "Sand", "Tur_orn", "Unk")
 
 # Filter the dataframe to exclude the specified labels
-RA.100_filtered <- data.subset %>%
+RA.100_filtered <- data_quadrats %>%
   filter(!Label %in% labels_to_exclude)
 
+#double check if only coral remain 
+unique(RA.100_filtered$Label)
+
+#
 Cor.RA <- RA.100_filtered %>%
   group_by(Label) %>%
   summarise(Count = n()) %>% 
