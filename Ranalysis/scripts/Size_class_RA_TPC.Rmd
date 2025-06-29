@@ -19,6 +19,8 @@ library(dplyr)
 library(tidyr)
 library(forcats)
 library(patchwork)
+library(paletteer)
+library(ggthemes)
 ```
 
 ```{r}
@@ -240,14 +242,23 @@ unique(RA.100$Label)
 
 
 pdf("output/Benthic_Relative_Abundance.pdf", width=3, height=4)
-RA.plot <- RA.100 %>%
-  ggplot(aes(x = Site, y = freq, fill = Label)) +
-  geom_col() +
+#RA.plot <- RA.100 %>%
+ # ggplot(aes(x = Site, y = freq, fill = Label)) +
+  #geom_col() +
   #scale_fill_manual(values = colors)+
+  #theme_bw() +
+  #ylab("Relative Abundance") +
+  #xlab("Site")
+
+fig6 <- RA.100 %>%
+  ggplot(aes(x = Site, y = freq, fill = Label)) +
+  geom_col()+ 
+  scale_fill_paletteer_d("ggthemes::Tableau_20") + 
   theme_bw() +
   ylab("Relative Abundance") +
   xlab("Site")
-RA.plot
+
+fig6
 dev.off()
 
 ```
@@ -273,190 +284,42 @@ Cor.RA <- RA.100_filtered %>%
 Cor.RA$Site <- "Manava"
 
 pdf("output/Coral_Relative_Abundance.pdf", width=3, height=4)
-RA.Cor.plot <- Cor.RA %>%
+fig7 <- Cor.RA %>%
   ggplot(aes(x = Site, y = freq, fill = Label)) +
-  geom_col() +
-  #scale_fill_manual(values = colors)+
+  geom_col()+ 
+  scale_fill_paletteer_d("rcartocolor::Pastel") + 
   theme_bw() +
   ylab("Relative Abundance") +
   xlab("Site")
-RA.Cor.plot 
+fig7 
 dev.off()
 
 ```
-
-
-
+combining all the graph in the same figure
 ```{r}
-#this one looks good
+#showing all the figure I want to combine together 
+#fig1 = relative abundance of the site per size and per transect
+#fig2 = relative abundance of the site per size vetical way 
+#fig3 = relative abundance of the site per size horizontal way
+#fig4 = general relative abundance of the Pocillopora species at the site 
+#fig5 = fig3 and fig4 combine on the same figure 
+#fig6 = relative abundance of the benthocs at the manava site 
+#fig7 = relative abundance of the corals at the manava site 
 
-#T3 <- data %>% filter(str_detect(Name, "T3"))
-#T3$Name <- gsub("TPC_poc_transect_3TPC_", "", T3$Name)
-#T3 <- T3 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-#counts <- T3 %>%
-#  group_by(Transect, Quad) %>%
-#  summarise(Count = n()) 
-#quadrat 00 is doubled
-#quadrat 36 is doubled
+#order of the graph on the figure 
+#fig6 on A (corner left)
+#fig7 on B (second figure at right side to fig6)
+#fig4 on C (top right)
+#fig3 on D (bottom right corner)
+#all legend need to be at the bottom of the figure 
+#site need to be remove beacuse all the same site 
+#relative abundance on X axes need to be also remove because everything is relative abundance 
 
-#T4 <- data %>% filter(str_detect(Name, "T4"))
-#T4$Name <- gsub("TPC_poc_Transect_4TPC_", "", T4$Name)
-#T4 <- T4 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-#counts <- T4 %>%
-#  group_by(Transect, Quad) %>%
-#  summarise(Count = n()) 
-#quadrat 38 is doubled
+fig8_combine <- (fig6 + fig7 + fig4 + fig3) + 
+  plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom")
 
-#T5 <- data %>% filter(str_detect(Name, "TPC_poc_Transect_5TPC_Q"))
-#T5$Name <- gsub("TPC_poc_Transect_5TPC_", "", T5$Name)
-#T5 <- T5 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-#counts <- T5 %>%
-#  group_by(Transect, Quad) %>%
-#  summarise(Count = n()) 
-#quadrat 00 is 4 times
-#quadrat 10 is doubled
-#quadrat 16 is doubled
-#quadrat 18 is doubled
-#quadrat 20 is doubled
-#quadrat 22 is doubled
-#quadrat 26 is doubled
-
-#T6 <- data %>% filter(str_detect(Name, "T6"))
-#T6$Name <- gsub("TPC_poc_Transect_6TPC_", "", T6$Name)
-#T6 <- T6 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-#counts <- T6 %>%
-#  group_by(Transect, Quad) %>%
-#  summarise(Count = n()) 
-#quadrat 00 is missing
-#quadrat 02 is missing
-
-```
-
-
-
-```{r}
-#Data with 30 points
-data$Name <- gsub("TPC_Transect_1TPC_", "", data$Name)
-data$Name <- gsub("TPC_Quadrats_transect_2TPC_", "", data$Name)
-data$Name <- gsub("TPC_poc_transect_3TPC_", "", data$Name)
-data$Name <- gsub("TPC_poc_Transect_4TPC_", "", data$Name)
-data$Name <- gsub("TPC_poc_Transect_6TPC_", "", data$Name)
-data$Name <- gsub("TPC_poc_Transect_5TPC_", "", data$Name)
-data$Name <- gsub("TPC_poc_TransectTPC_", "", data$Name)
-data$Name <- gsub("TPC_TPC_", "", data$Name)
-data$Name <- gsub("TPC_", "", data$Name)
-
-
-#split first column into metadata
-data <- data %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-
-
-counts <- data %>%
-  group_by(Transect, Quad) %>%
-  summarise(Count = n()) 
-
-#data with 50 points
-data_2$Name <- gsub("TPC_Transect_1TPC_", "", data_2$Name)
-data_2$Name <- gsub("TPC_Quadrats_transect_2TPC_", "", data_2$Name)
-data_2$Name <- gsub("TPC_poc_TransectTPC_", "", data_2$Name)
-data_2$Name <- gsub("TPC_TPC_", "", data_2$Name)
-data_2$Name <- gsub("TPC_", "", data_2$Name)
-
-#split first column into metadata
-data_2 <- data_2 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-
-
-counts <- data_2 %>%
-  group_by(Transect, Quad) %>%
-  summarise(Count = n()) 
-
-
-#data with 100 points
-data_3$Name <- gsub("100_TPC_", "", data_3$Name)
-
-#split first column into metadata
-data_3 <- data_3 %>% separate(Name, c("Quad", "Site", "Transect", "Num"))
-
-counts <- data_3 %>%
-  group_by(Transect, Quad) %>%
-  summarise(Count = n()) 
-
-```
-
-```{r}
-
-T2.RA <- T2 %>%
-  group_by(Label) %>%
-  summarise(Count = n()) %>% 
-  mutate(freq=Count/sum(Count))
-T2.RA$Transect <- "Transect 2"
-
-colors <- c("Acropora"="yellow",   "D_coral" = "gray",    "MACR_Cal_H" ="green",  "MAL"="lightgreen", "Monti"="purple", 
-            "Pocillopor" = "coral", "Por Mass D" = "lightyellow", "Porites" ="brown", "Sand"= "tan", "Turbin" = "darkgreen",
-            "Turf" = "cyan", "UOth" = "black", "UnkMacroa" = "blue",  "Unkn coral" = "darkgray")
-
-T2.RA.plot <- T2.RA %>%
-  ggplot(aes(x = Transect, y = freq, fill = Label)) +
-  geom_col() +
-  scale_fill_manual(values = colors)+
-  theme_bw() +
-  ylab("Relative Abundance") +
-  xlab("Transect")
-T2.RA.plot
-
-
-
-```
-keep only corals for analysis
-```{r}
-# Define the labels to filter out
-labels_to_exclude <- c("D_coral", "MACR_Cal_H", "MAL", "Por Mass D", "Sand", "Turbin", "Turf", "UOth", "UnkMacroa")
-
-# Filter the dataframe to exclude the specified labels
-T2_filtered <- T2 %>%
-  filter(!Label %in% labels_to_exclude)
-
-
-T2.Cor.RA <- T2_filtered %>%
-  group_by(Label) %>%
-  summarise(Count = n()) %>% 
-  mutate(freq=Count/sum(Count))
-T2.Cor.RA$Transect <- "Transect 2"
-
-T2.RA.Cor.plot <- T2.Cor.RA %>%
-  ggplot(aes(x = Transect, y = freq, fill = Label)) +
-  geom_col() +
-  scale_fill_manual(values = colors)+
-  theme_bw() +
-  ylab("Relative Abundance") +
-  xlab("Transect")
-T2.RA.Cor.plot 
-
-
-```
-
-```{r}
-#data with 100 points
-T2_100.RA <- T2 %>%
-  group_by(Label) %>%
-  summarise(Count = n()) %>% 
-  mutate(freq=Count/sum(Count))
-T2_100.RA$Transect <- "Transect 2"
-
-colors <- c("Acropora"="yellow",   "D_coral" = "gray",    "MACR_Cal_H" ="green",  "MAL"="lightgreen", "Monti"="purple", 
-            "Pocillopor" = "coral", "Por Mass D" = "lightyellow", "Porites" ="brown", "Sand"= "tan", "Turbin" = "darkgreen",
-            "Turf" = "cyan", "UOth" = "black", "UnkMacroa" = "blue",  "Unkn coral" = "darkgray")
-
-T2_100.RA.plot <- T2_100.RA %>%
-  ggplot(aes(x = Transect, y = freq, fill = Label)) +
-  geom_col() +
-  scale_fill_manual(values = colors)+
-  theme_bw() +
-  ylab("Relative Abundance") +
-  xlab("Transect")
-T2_100.RA.plot
-
-```
+fig8_combine
 ```
 
 
@@ -484,7 +347,7 @@ RA.manava.plot_species
 ```
 
 ```{r}
-#
+
 ```
 
 
