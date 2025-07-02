@@ -315,11 +315,13 @@ combining all the graph in the same figure
 #site need to be remove beacuse all the same site 
 #relative abundance on X axes need to be also remove because everything is relative abundance 
 
+pdf("output/fig_combine_Fig2TPCpaper.pdf", width=16, height=10)
+jpeg("output/fig_combine_Fig2TPCpaper.jpg", width=4800, height=3000, quality=100, res= 300 )
 fig8_combine <- (fig6 + fig7 + fig4 + fig3) + 
   plot_layout(guides = "collect") & 
   theme(legend.position = "bottom")
-
 fig8_combine
+dev.off()
 ```
 
 
