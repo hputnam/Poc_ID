@@ -176,6 +176,10 @@ fig4 <- ggplot(relative_abundance.manava, aes(x = Site.x, y = Relative_Abundance
 
 fig4
 ```
+formating the data to make the chi.square test on the relative abundance of the differentes species of Pocillopora at manava tpc site
+```{r}
+
+```
 
 Arrange figures
 ```{r}
